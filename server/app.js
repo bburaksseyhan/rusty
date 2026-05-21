@@ -122,8 +122,4 @@ app.get("/admin", requireAdmin, (_req, res) => {
   res.sendFile(adminPath);
 });
 
-app.use((_req, res) => {
-  res.status(404).json({ error: "not_found" });
-});
-
 export default app;
