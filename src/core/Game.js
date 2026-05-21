@@ -29,6 +29,7 @@ import { TitleScreen } from "../ui/TitleScreen.js";
 import { Objective } from "../ui/Objective.js";
 import { HintBadge } from "../ui/HintBadge.js";
 import { EndingScreen } from "../ui/EndingScreen.js";
+import { submitFeedback } from "../api/feedback.js";
 
 import {
   MEMORY_FRAGMENTS,
@@ -967,11 +968,7 @@ export class Game {
     this.audio.memoryReveal?.();
 
     this.endingScreen.show((answers) => {
-      // Survey results are kept local — wire to a backend here if
-      // ever needed. Logging gives Kai's developer a hint while
-      // building.
-      // eslint-disable-next-line no-console
-      console.info("[Rusty] Chapter One feedback:", answers);
+      submitFeedback(answers);
     });
   }
 

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rusty — Geri Bildirim</title>
+  <style>
+    :root {
+      --bg: #0f0e0c;
+      --card: #1a1814;
+      --text: #f2e8d8;
+      --muted: #9a8f7a;
+      --accent: #e8b86d;
+      --border: rgba(255, 220, 170, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 8px; }
+    .muted { color: var(--muted); font-size: 0.875rem; margin-bottom: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .stat strong { display: block; font-size: 1.5rem; color: var(--accent); }
+    .stat span { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    section h2 { font-size: 0.8rem; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; }
+    .bar-label { flex: 0 0 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+    .bar-count { flex: 0 0 32px; text-align: right; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    .comment { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .err { color: #f08080; }
+  </style>
+</head>
+<body>
+  <h1>Rusty — Bölüm 1 geri bildirim</h1>
+  <p class="muted" id="meta">Yükleniyor…</p>
+
+  <div class="grid" id="totals"></div>
+  <div id="breakdowns"></div>
+  <section>
+    <h2>Son kayıtlar</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>★</th>
+          <th>2. bölüm</th>
+          <th>An</th>
+          <th>Hiss</th>
+          <th>Yorum</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <script>
+    async function load() {
+      const meta = document.getElementById("meta");
+      try {
+        const [statsRes, listRes] = await Promise.all([
+          fetch("/api/admin/stats"),
+          fetch("/api/admin/feedback?limit=50"),
+        ]);
+        if (!statsRes.ok || !listRes.ok) throw new Error("API " + statsRes.status);
+        const stats = await statsRes.json();
+        const { items } = await listRes.json();
+
+        meta.textContent = `${stats.total} kayıt · ${stats.submitted_count} gönderildi · ${stats.skipped_count} geçildi`;
+
+        document.getElementById("totals").innerHTML = `
+          <div class="stat"><strong>${stats.total}</strong><span>Toplam</span></div>
+          <div class="stat"><strong>${stats.submitted_count}</strong><span>Gönderilen</span></div>
+          <div class="stat"><strong>${stats.skipped_count}</strong><span>Geçilen</span></div>
+          <div class="stat"><strong>${stats.avg_enjoyment ?? "—"}</strong><span>Ort. beğeni</span></div>
+        `;
+
+        const breakdowns = document.getElementById("breakdowns");
+        breakdowns.innerHTML = "";
+        for (const [title, rows] of [
+          ["2. bölüm", stats.continue],
+          ["En sevilen an", stats.favourite],
+          ["Hissiyat", stats.feel],
+        ]) {
+          if (!rows?.length) continue;
+          const max = Math.max(...rows.map((r) => r.count));
+          const section = document.createElement("section");
+          section.innerHTML = `<h2>${title}</h2>` + rows.map((r) => `
+            <div class="bar-row">
+              <span class="bar-label">${escapeHtml(r.value)}</span>
+              <div class="bar-track"><div class="bar-fill" style="width:${(r.count / max) * 100}%"></div></div>
+              <span class="bar-count">${r.count}</span>
+            </div>
+          `).join("");
+          breakdowns.appendChild(section);
+        }
+
+        document.getElementById("rows").innerHTML = items.map((r) => `
+          <tr>
+            <td>${r.skipped ? "—" : formatDate(r.created_at)}</td>
+            <td>${r.skipped ? "geç" : (r.enjoyment ?? "—")}</td>
+            <td>${escapeHtml(r.continue_ch2 || "")}</td>
+            <td>${escapeHtml(r.favourite || "")}</td>
+            <td>${escapeHtml(r.feel || "")}</td>
+            <td class="comment" title="${escapeAttr(r.comment || "")}">${escapeHtml(r.comment || "")}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        meta.innerHTML = `<span class="err">Veri yüklenemedi: ${escapeHtml(String(e.message))}</span>`;
+      }
+    }
+
+    function formatDate(iso) {
+      try { return new Date(iso + "Z").toLocaleString("tr-TR"); }
+      catch { return iso; }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    load();
+  </script>
+</body>
+</html>
