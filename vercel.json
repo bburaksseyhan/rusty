@@ -5,7 +5,7 @@
     { "source": "/admin", "destination": "/api/admin" }
   ],
   "functions": {
-    "api/**/*.js": {
+    "api/[...path].js": {
       "includeFiles": "server/admin.html",
       "maxDuration": 10
     }

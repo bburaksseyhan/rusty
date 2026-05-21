@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { requireAdmin } from "./auth.js";
 import { applyCors, handleOptions } from "./cors.js";
-import { insertFeedback, listFeedback, feedbackStats } from "./db.js";
+import { insertFeedback, listFeedback, feedbackStats, storageBackend } from "./store.js";
 import { rateLimitMiddleware } from "./rateLimit.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -35,15 +35,18 @@ function wrap(handler) {
   return (req, res) => {
     applyCors(req, res);
     if (handleOptions(req, res)) return;
-    return handler(req, res);
+    Promise.resolve(handler(req, res)).catch((err) => {
+      console.error("[feedback-api]", err);
+      res.status(500).json({ error: "internal_error" });
+    });
   };
 }
 
-export const health = wrap((req, res) => {
+export const health = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }
-  return res.json({ ok: true });
+  return res.json({ ok: true, storage: storageBackend() });
 });
 
 export const feedback = wrap((req, res) => {
@@ -51,14 +54,14 @@ export const feedback = wrap((req, res) => {
     return res.status(405).json({ error: "method_not_allowed" });
   }
 
-  rateLimitMiddleware(req, res, () => {
+  rateLimitMiddleware(req, res, async () => {
     const payload = normalizePayload(req.body);
     if (payload.error) {
       return res.status(400).json({ error: payload.error });
     }
 
     try {
-      const row = insertFeedback({
+      const row = await insertFeedback({
         ...payload,
         client_ip: req.headers["x-forwarded-for"]?.split(",")[0]?.trim()
           || req.socket?.remoteAddress
@@ -73,25 +76,27 @@ export const feedback = wrap((req, res) => {
   });
 });
 
-export const adminStats = wrap((req, res) => {
+export const adminStats = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }
-  requireAdmin(req, res, () => res.json(feedbackStats()));
-});
-
-export const adminFeedback = wrap((req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "method_not_allowed" });
-  }
-  requireAdmin(req, res, () => {
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
-    const offset = Math.max(0, Number(req.query.offset) || 0);
-    res.json({ items: listFeedback({ limit, offset }) });
+  requireAdmin(req, res, async () => {
+    res.json(await feedbackStats());
   });
 });
 
-export const adminPage = wrap((req, res) => {
+export const adminFeedback = wrap(async (req, res) => {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "method_not_allowed" });
+  }
+  requireAdmin(req, res, async () => {
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+    res.json({ items: await listFeedback({ limit, offset }) });
+  });
+});
+
+export const adminPage = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }

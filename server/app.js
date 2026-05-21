@@ -27,11 +27,11 @@ app.use(
   }),
 );
 
-// Yerel geliştirme — Vercel'de api/*.js dosyaları aynı işi yapar
 app.get("/api/health", health);
 app.post("/api/feedback", feedback);
 app.get("/api/admin/stats", adminStats);
 app.get("/api/admin/feedback", adminFeedback);
 app.get("/admin", adminPage);
+app.get("/api/admin", adminPage);
 
 export default app;
