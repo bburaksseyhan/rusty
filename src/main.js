@@ -1,4 +1,9 @@
+import { inject } from "@vercel/analytics";
 import { Game } from "./core/Game.js";
+
+if (import.meta.env.PROD) {
+  inject();
+}
 
 // ============================================================
 //  Entry point — instantiate the Game and start the loop.
