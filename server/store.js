@@ -7,15 +7,29 @@ const FEEDBACK_SEQ = "feedback:seq";
 
 let redis;
 
+/** Vercel Upstash entegrasyonu KV_* verir; doğrudan Upstash UPSTASH_* verir. */
+function redisEnv() {
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL
+    || process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN
+    || process.env.KV_REST_API_TOKEN;
+  return url && token ? { url, token } : null;
+}
+
 function getRedis() {
-  if (!redis && process.env.UPSTASH_REDIS_REST_URL) {
-    redis = Redis.fromEnv();
+  if (!redis) {
+    const env = redisEnv();
+    if (env) {
+      redis = new Redis(env);
+    }
   }
   return redis;
 }
 
 function useRedis() {
-  return Boolean(process.env.UPSTASH_REDIS_REST_URL);
+  return Boolean(redisEnv());
 }
 
 async function insertRedis(row) {
