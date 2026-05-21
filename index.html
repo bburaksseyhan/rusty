@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rusty — A Tiny Desktop Adventure</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <div id="hud">
+        <div class="hud-left">
+          <div class="portrait">
+            <div class="portrait-face"></div>
+            <div class="portrait-name">RUSTY</div>
+          </div>
+          <div class="hearts" id="hearts">
+            <span class="heart"></span>
+            <span class="heart"></span>
+            <span class="heart"></span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="cells">
+            <span class="cell-icon"></span>
+            <span class="cell-count"><span id="cell-current">0</span>/<span id="cell-total">8</span></span>
+          </div>
+          <div class="gear" title="Settings"></div>
+        </div>
+
+        <div class="subtitle" id="subtitle">
+          <span id="subtitle-text">A tiny forgotten robot wakes up on a desk that feels like the whole world…</span>
+        </div>
+
+        <div id="hint-badge" class="hint-badge" aria-hidden="true">
+          <div class="hint-badge-label">Current Objective</div>
+          <div class="hint-badge-text" id="hint-badge-text"></div>
+        </div>
+
+        <div id="objective" class="objective" aria-hidden="true">
+          <div class="objective-title">Rusty's Route Home</div>
+          <ol class="objective-stages" id="objective-stages"></ol>
+          <div class="objective-foot">Press <span class="key">E</span> to dismiss</div>
+        </div>
+
+        <div class="hint" id="hint">
+          <span class="key">W A S D</span> move &nbsp;·&nbsp;
+          <span class="key">Space</span> jump &nbsp;·&nbsp;
+          <span class="key">Shift</span> sprint &nbsp;·&nbsp;
+          <span class="key">E</span> hint &nbsp;·&nbsp;
+          <span class="key">Q</span> story &nbsp;·&nbsp;
+          <span class="key">Click</span> free-look &nbsp;·&nbsp;
+          <span class="key">Esc</span> release
+        </div>
+      </div>
+
+      <div id="title-screen">
+        <div class="title-stack">
+          <div class="title-eyebrow">A miniature cinematic adventure</div>
+          <h1 class="title">RUSTY</h1>
+          <p class="tagline">A forgotten keychain robot in a giant desktop world.</p>
+          <button id="play-btn">▶  Begin the adventure</button>
+          <div class="title-foot">Click the world to enter free-look · Esc to release · WebGL</div>
+        </div>
+        <div class="vignette"></div>
+      </div>
+
+      <div id="loading">
+        <div class="loading-inner">
+          <div class="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+          <div class="loading-label">Powering up Rusty…</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
