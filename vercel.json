@@ -1,8 +1,11 @@
 {
   "buildCommand": "npm run build",
-  "framework": null,
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/admin", "destination": "/api/admin" }
+  ],
   "functions": {
-    "server.js": {
+    "api/**/*.js": {
       "includeFiles": "server/admin.html",
       "maxDuration": 10
     }
