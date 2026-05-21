@@ -1,14 +1,23 @@
 // ============================================================
-//  EndingScreen — Chapter One feedback survey overlay.
+//  EndingScreen — Chapter One closing cinematic + feedback survey.
 //
-//  Triggered by Game.js once Bolt's full dialogue finishes.
-//  A single compact panel: short "Bölüm 1 Sonu" header above a
-//  five-question feedback form. After submit (or skip), shows a
-//  "Teşekkürler" beat and reloads the page back to the title.
-//
-//  Pure DOM. No game-loop coupling. Survey answers are passed to
-//  the optional onSubmit callback — wire to a backend if needed.
+//  Triggered by Game.js once Bolt's full dialogue finishes:
+//    1. Fade-to-black overlay + trailer-style credits roll.
+//    2. Survey card (credits fade out first).
+//    3. Thank-you beat → reload to title screen.
 // ============================================================
+
+const CREDITS_HOLD_MS = 6200;
+
+const CREDIT_LINES = [
+  { role: "YÖNETMEN",        name: "Masa Lambası"           },
+  { role: "YAPIM",           name: "Kai (17, sevgili)"      },
+  { role: "BAŞROL",          name: "RUSTY — anahtarlık robot" },
+  { role: "OYUNCULAR",       name: "BOLT — ikinci ışık"     },
+  { role: "DÜNYA",           name: "Three.js · WebGL"       },
+  { role: "MÜZİK",           name: "Tek sıcak hücre"        },
+  { role: "BEKLEME SÜRESİ",  name: "1.047 gece"             },
+];
 
 const SURVEY_QUESTIONS = [
   {
@@ -55,38 +64,92 @@ const SURVEY_QUESTIONS = [
 export class EndingScreen {
   constructor() {
     this._root      = null;
+    this._credits   = null;
+    this._card      = null;
     this._onSubmit  = null;
     this._dismissed = false;
+    this._surveyTimer = null;
   }
 
   /**
-   * Begin the closing sequence: fade in overlay + single survey
-   * panel. There is intentionally only one panel — no separate
-   * credits screen — to keep the closing flow short.
-   * @param {(answers: Record<string, string|number>) => void} [onSubmit]
-   *   Optional callback when the survey is submitted (or skipped).
+   * @param {(answers: Record<string, string|number|boolean>) => void} [onSubmit]
    */
   show(onSubmit) {
-    if (this._root) return; // idempotent
+    if (this._root) return;
     this._onSubmit  = onSubmit ?? (() => {});
     this._dismissed = false;
+    this._thanked   = false;
 
     this._root = document.createElement("div");
     this._root.className = "ending-overlay";
     document.body.appendChild(this._root);
 
-    this._renderSurvey();
+    this._renderCredits();
+    this._surveyTimer = setTimeout(() => this._renderSurvey(), CREDITS_HOLD_MS);
   }
 
-  /** Tear down the overlay (used after the survey is submitted). */
   dismiss() {
+    if (this._surveyTimer) {
+      clearTimeout(this._surveyTimer);
+      this._surveyTimer = null;
+    }
     if (!this._root || this._dismissed) return;
     this._dismissed = true;
     this._root.classList.add("ending-out");
     setTimeout(() => {
       this._root?.remove();
       this._root = null;
+      this._card = null;
+      this._credits = null;
     }, 700);
+  }
+
+  // -----------------------------------------------------------
+  //  Credits (trailer-style roll)
+  // -----------------------------------------------------------
+  _renderCredits() {
+    if (!this._root || this._credits) return;
+
+    const credits = document.createElement("div");
+    credits.className = "ending-credits";
+    this._credits = credits;
+
+    const title = document.createElement("div");
+    title.className = "ending-title";
+    title.textContent = "Bölüm 1 Sonu";
+    credits.appendChild(title);
+
+    const sub = document.createElement("div");
+    sub.className = "ending-subtitle";
+    sub.textContent = "Masa";
+    credits.appendChild(sub);
+
+    const list = document.createElement("div");
+    list.className = "ending-roll";
+    CREDIT_LINES.forEach((line) => {
+      const row = document.createElement("div");
+      row.className = "ending-row";
+
+      const role = document.createElement("span");
+      role.className = "ending-role";
+      role.textContent = line.role;
+
+      const name = document.createElement("span");
+      name.className = "ending-name";
+      name.textContent = line.name;
+
+      row.appendChild(role);
+      row.appendChild(name);
+      list.appendChild(row);
+    });
+    credits.appendChild(list);
+
+    const thanks = document.createElement("div");
+    thanks.className = "ending-thanks";
+    thanks.textContent = "Kai'nin masasında bir gece daha geçti. Teşekkürler.";
+    credits.appendChild(thanks);
+
+    this._root.appendChild(credits);
   }
 
   // -----------------------------------------------------------
@@ -95,12 +158,17 @@ export class EndingScreen {
   _renderSurvey() {
     if (!this._root || this._card) return;
 
+    if (this._credits) {
+      this._credits.classList.add("ending-credits-out");
+      const el = this._credits;
+      setTimeout(() => el.remove(), 700);
+      this._credits = null;
+    }
+
     const card = document.createElement("div");
     card.className = "ending-survey-card";
     this._card = card;
 
-    // Small cinematic eyebrow keeps the "End of Chapter" feel
-    // without spawning a separate credits screen first.
     const eyebrow = document.createElement("div");
     eyebrow.className = "ending-survey-eyebrow";
     eyebrow.textContent = "Bölüm 1 Sonu";
@@ -168,16 +236,9 @@ export class EndingScreen {
     card.appendChild(form);
     this._root.appendChild(card);
 
-    // Fade-in animation
     requestAnimationFrame(() => card.classList.add("visible"));
   }
 
-  /**
-   * Swap the survey card's contents for a short "Thank you" beat,
-   * then return the user to the game's main page (title screen).
-   * A full reload is the safest reset — it tears down audio,
-   * Three.js resources, and replays the intro cleanly.
-   */
   _showThanks(skipped) {
     if (!this._card || this._thanked) return;
     this._thanked = true;
@@ -203,7 +264,6 @@ export class EndingScreen {
     dots.innerHTML = "<span></span><span></span><span></span>";
     card.appendChild(dots);
 
-    // Brief moment to let the user read, then back to title screen.
     setTimeout(() => {
       try { window.location.reload(); }
       catch { this.dismiss(); }
@@ -218,7 +278,6 @@ export class EndingScreen {
       const star = document.createElement("button");
       star.type = "button";
       star.className = "survey-star";
-      star.dataset.value = String(i);
       star.textContent = "★";
       star.addEventListener("click", () => {
         answers[q.id] = i;
@@ -253,7 +312,7 @@ export class EndingScreen {
   _buildYesNo(row, q, answers) {
     const wrap = document.createElement("div");
     wrap.className = "survey-yesno";
-    ["Yes, please", "Not for me"].forEach((opt) => {
+    ["Evet", "Hayır"].forEach((opt) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "survey-choice";

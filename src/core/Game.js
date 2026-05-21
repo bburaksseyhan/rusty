@@ -455,7 +455,7 @@ export class Game {
     const dt = Math.min(0.05, this._clock.getDelta());
     const t  = this._clock.elapsedTime;
 
-    if (this._started) {
+    if (this._started && !this._endingLocked) {
       const moving = Math.hypot(
         this.player.velocity.x, this.player.velocity.z
       ) > 0.5;
@@ -963,6 +963,15 @@ export class Game {
   _showEnding() {
     if (this._endingShown) return;
     this._endingShown = true;
+    this._endingLocked = true;
+
+    this.input.setEnabled(false);
+    if (document.pointerLockElement) {
+      document.exitPointerLock?.();
+    }
+
+    const hud = document.getElementById("hud");
+    if (hud) hud.style.pointerEvents = "none";
 
     // Soft musical sting so the cut isn't silent
     this.audio.memoryReveal?.();

@@ -36,8 +36,31 @@ export class Input {
     this._touchY = 0;
 
     this._pointerLocked = false;
+    this._enabled = true;
 
     this._bind();
+  }
+
+  /** Pause all gameplay input (ending overlay, menus, etc.). */
+  setEnabled(enabled) {
+    this._enabled = enabled;
+    if (!enabled) this._resetState();
+  }
+
+  isEnabled() {
+    return this._enabled;
+  }
+
+  _resetState() {
+    this._keys.clear();
+    this._jumpQueued = false;
+    this._interactQueued = false;
+    this._storyQueued = false;
+    this.mouseDelta.x = 0;
+    this.mouseDelta.y = 0;
+    this.wheelDelta = 0;
+    this._dragging = false;
+    this._touchActive = false;
   }
 
   /** True if the browser has acquired pointer lock on our canvas. */
@@ -96,6 +119,7 @@ export class Input {
   // ----------------------------------------------------------
   _bind() {
     window.addEventListener("keydown", (e) => {
+      if (!this._enabled) return;
       // Browsers fire keydown repeatedly while the key is held;
       // ignore repeats so edge-triggers stay edge-triggers.
       if (e.repeat) return;
@@ -111,7 +135,10 @@ export class Input {
       }
       this._keys.add(e.code);
     });
-    window.addEventListener("keyup", (e) => this._keys.delete(e.code));
+    window.addEventListener("keyup", (e) => {
+      if (!this._enabled) return;
+      this._keys.delete(e.code);
+    });
 
     // ---- Pointer lock (primary) + drag fallback ----
     //
@@ -124,6 +151,7 @@ export class Input {
     });
 
     this.dom.addEventListener("mousedown", (e) => {
+      if (!this._enabled) return;
       if (!this._pointerLocked) {
         // Request pointer lock on user gesture. Rejects with
         // WrongDocumentError in embedded / iframe previews (Cursor,
@@ -148,6 +176,7 @@ export class Input {
     window.addEventListener("mouseup", () => (this._dragging = false));
 
     window.addEventListener("mousemove", (e) => {
+      if (!this._enabled) return;
       if (this._pointerLocked) {
         // movementX/Y is the delta from the last event, regardless
         // of the cursor position (cursor is hidden).
@@ -165,6 +194,7 @@ export class Input {
     this.dom.addEventListener(
       "wheel",
       (e) => {
+        if (!this._enabled) return;
         this.wheelDelta += e.deltaY;
         e.preventDefault();
       },
@@ -172,13 +202,14 @@ export class Input {
     );
 
     this.dom.addEventListener("touchstart", (e) => {
+      if (!this._enabled) return;
       this._touchActive = true;
       this._touchX = e.touches[0].clientX;
       this._touchY = e.touches[0].clientY;
     });
     this.dom.addEventListener("touchend", () => (this._touchActive = false));
     this.dom.addEventListener("touchmove", (e) => {
-      if (!this._touchActive) return;
+      if (!this._enabled || !this._touchActive) return;
       this.mouseDelta.x += e.touches[0].clientX - this._touchX;
       this.mouseDelta.y += e.touches[0].clientY - this._touchY;
       this._touchX = e.touches[0].clientX;

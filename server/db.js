@@ -5,7 +5,15 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, "..", "data");
-const DB_PATH = process.env.FEEDBACK_DB_PATH || path.join(DATA_DIR, "feedback.db");
+
+function defaultDbPath() {
+  if (process.env.FEEDBACK_DB_PATH) return process.env.FEEDBACK_DB_PATH;
+  // Vercel serverless: writable /tmp (warm instance persistence only)
+  if (process.env.VERCEL) return "/tmp/feedback.db";
+  return path.join(DATA_DIR, "feedback.db");
+}
+
+const DB_PATH = defaultDbPath();
 
 let db;
 

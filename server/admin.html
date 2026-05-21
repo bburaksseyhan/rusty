@@ -89,7 +89,16 @@
           fetch("/api/admin/stats"),
           fetch("/api/admin/feedback?limit=50"),
         ]);
-        if (!statsRes.ok || !listRes.ok) throw new Error("API " + statsRes.status);
+        if (statsRes.status === 401 || listRes.status === 401) {
+          throw new Error("Yetkisiz — tarayıcıda kullanıcı adı ve şifre girin (ADMIN_USER / ADMIN_PASS).");
+        }
+        if (statsRes.status === 503 || listRes.status === 503) {
+          throw new Error("Admin ayarlanmamış — Vercel'de ADMIN_USER ve ADMIN_PASS env ekleyin.");
+        }
+        if (!statsRes.ok || !listRes.ok) {
+          const body = await statsRes.text().catch(() => "");
+          throw new Error(`API ${statsRes.status}${body ? `: ${body.slice(0, 120)}` : ""}`);
+        }
         const stats = await statsRes.json();
         const { items } = await listRes.json();
 
