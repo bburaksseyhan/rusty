@@ -60,13 +60,18 @@ export function attachDevTools(game) {
 
       game.subtitles.hide();
       game.hintBadge.hide();
-      game.player.root.position.set(...CHARGE_LAYOUT.rusty);
+      game.player.root.position.set(...CHARGE_LAYOUT.notebookMeet);
       game.player.velocity.set(0, 0, 0);
       game.player.cells = game.world.collectibles.length;
       game.hud.setCells(game.player.cells, game.world.collectibles.length);
 
-      game._friend.spawnAt(new THREE.Vector3(...CHARGE_LAYOUT.bolt));
+      const meet = CHARGE_LAYOUT.notebookMeet;
+      game._friend.spawnAt(
+        new THREE.Vector3(meet[0] + 1.5, meet[1], meet[2] - 0.8),
+      );
       game._friend.state = "arrived";
+
+      document.getElementById("loading")?.classList.add("gone");
 
       game._startChargeFinale();
       console.info("[rusty dev] Şarj finali başlatıldı.");

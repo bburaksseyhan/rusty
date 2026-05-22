@@ -119,12 +119,15 @@ function addBatteryTransfer(world) {
 }
 
 /** Not defteri yerleşimi — vidalar bu grubun yerel koordinatına göre konur */
-const NOTEBOOK_PLACE = Object.freeze({
+export const NOTEBOOK_PLACE = Object.freeze({
   position: [-10, 0, -40],
   rotationY: 0.12,
 });
 
-function notebookLocalToWorld(lx, ly, lz) {
+/** Üst kitap yüzeyi (ayak seviyesi) — collectible / şarj hizası */
+export const NOTEBOOK_TOP_Y = 4.02;
+
+export function notebookLocalToWorld(lx, ly, lz) {
   const [px, py, pz] = NOTEBOOK_PLACE.position;
   const r = NOTEBOOK_PLACE.rotationY;
   const c = Math.cos(r);
@@ -268,7 +271,7 @@ function addCollectibles(world) {
     [8, 1.6, 6],     // on the mousepad
     [2, 5.3, -2],    // top of the gaming mouse
     [-14, 20.0, -20],// floating just above the mug rim — reachable from top (y=18.2+3.37=21.5)
-    [-10, 7.0, -40], // top of notebook stack
+    [-10, NOTEBOOK_TOP_Y + 0.5, -40], // top of notebook stack
     [0, 13.0, -55],  // monitor stand platform (final)
     [-22, 8.6, -16], // bonus: top of the green battery
   ];

@@ -46,7 +46,7 @@ export class Subtitles {
    * Returns the total speech duration in ms so callers can chain
    * subtitle holds with the speech ending.
    */
-  speak(text, { perCharMs = 45, holdMs = 3500, onChar } = {}) {
+  speak(text, { perCharMs = 78, holdMs = 4500, onChar } = {}) {
     this._cancelTyping();
     this._textEl.textContent = "";
     this._el.classList.add("show", "typing");

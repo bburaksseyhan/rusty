@@ -127,6 +127,16 @@ export const COLLECTIBLE = {
   pickupRadius: 1.0, // added to cell's own radius
 };
 
+/** Robot konuşması ve hikâye altyazıları — okunabilir tempo */
+export const NARRATION = {
+  perCharMs: 78,
+  holdShort: 4500,
+  holdLong: 6500,
+  lineGap: 3200,
+  openingIntervalMs: 18000,
+  openingLineMs: 11000,
+};
+
 // ---- Emotional system tuning --------------------------------
 export const EMOTION = {
   // Decay rates (higher = faster return to baseline)

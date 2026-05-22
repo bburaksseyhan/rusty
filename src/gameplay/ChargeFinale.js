@@ -1,43 +1,45 @@
 import * as THREE from "three";
-import { createPowerOutlet } from "../world/props/powerOutlet.js";
-import { RENDER } from "../core/config.js";
+import { createChargeStation } from "../world/props/chargeStation.js";
+import { createChargeIndicator } from "../world/props/chargeIndicator.js";
+import {
+  NOTEBOOK_PLACE,
+  NOTEBOOK_TOP_Y,
+  notebookLocalToWorld,
+} from "../world/Level1.js";
+import { NARRATION, RENDER } from "../core/config.js";
 
-// Sahne: robotlar solda, priz sağda — kamera doğudan (+X) geniş bakar
-export const CHARGE_LAYOUT = {
-  outlet: [-4.2, 7.12, -43.6],
-  rusty: [-8.2, 7.0, -42.4],
-  bolt: [-10.8, 7.0, -42.8],
-  notebookMeet: [-10, 7.0, -40],
-};
+/** Defter yerel: sol kenar = negatif lx */
+const DOCK_LOCAL = Object.freeze({ lx: -8.2, lz: 0.2 });
+/** Şarjda yan yana — aynı hizada, ünitenin önünde */
+const RUSTY_LOCAL = Object.freeze({ lx: -5.4, lz: 0.55 });
+const BOLT_LOCAL = Object.freeze({ lx: -5.4, lz: -0.55 });
 
-const OUTLET_POS = new THREE.Vector3(...CHARGE_LAYOUT.outlet);
-const RUSTY_SLOT = new THREE.Vector3(...CHARGE_LAYOUT.rusty);
-const BOLT_SLOT = new THREE.Vector3(...CHARGE_LAYOUT.bolt);
-const SCENE_CENTER = new THREE.Vector3(-7.2, 7.4, -42.8);
+function worldOnNotebook(lx, lz) {
+  const [x, , z] = notebookLocalToWorld(lx, NOTEBOOK_TOP_Y, lz);
+  return new THREE.Vector3(x, NOTEBOOK_TOP_Y + 0.02, z);
+}
 
-// Geniş masaüstü kadrajı (~11–13 birim mesafe, bakış y=9 priz+robot göğsü)
-const CAM_WIDE = new THREE.Vector3(3.2, 13.0, -41.8);
-const LOOK_WIDE = new THREE.Vector3(-7.0, 9.0, -43.2);
-const CAM_CHARGE = new THREE.Vector3(2.4, 12.2, -41.5);
-const LOOK_CHARGE = new THREE.Vector3(-5.8, 9.1, -43.5);
+const STATION_WORLD = worldOnNotebook(DOCK_LOCAL.lx, DOCK_LOCAL.lz);
+const RUSTY_SLOT = worldOnNotebook(RUSTY_LOCAL.lx, RUSTY_LOCAL.lz);
+const BOLT_SLOT = worldOnNotebook(BOLT_LOCAL.lx, BOLT_LOCAL.lz);
+const SCENE_CENTER = new THREE.Vector3().addVectors(RUSTY_SLOT, STATION_WORLD).multiplyScalar(0.5);
+SCENE_CENTER.y = NOTEBOOK_TOP_Y + 1.2;
 
-const WALK_SPEED = 2.0;
+const CAM_WIDE = new THREE.Vector3(2.5, 10.5, -36.5);
+const LOOK_WIDE = SCENE_CENTER.clone();
+/** Şarj kadrajı — robot yüzleri kameraya dönük okunur */
+const CAM_CHARGE = new THREE.Vector3(-4.2, 8.6, -34.2);
+const LOOK_CHARGE = new THREE.Vector3().addVectors(RUSTY_SLOT, BOLT_SLOT).multiplyScalar(0.5);
+LOOK_CHARGE.y += 1.55;
+
 const FINALE_FOV = 52;
 
-/** Fazlar bu süre dolmadan ilerlemez (F9 ile anında yürüme bitmesin diye) */
 const TIMING = {
-  revealAnim: 2.4,
-  revealMin: 5.5,
-  walkMin: 6.0,
-  chargeDuration: 12.0,
-  afterChargeMin: 6.5,
-};
-
-const SUBTITLE_MS = {
-  reveal: 9500,
-  walk: 9000,
-  plug: 10000,
-  done: 8000,
+  reveal: 4.5,
+  walk: 5.5,
+  charge: 12.0,
+  cableDelay: 1.2,
+  done: 7.0,
 };
 
 const Phase = {
@@ -47,11 +49,18 @@ const Phase = {
   DONE: 3,
 };
 
+export const CHARGE_LAYOUT = {
+  station: STATION_WORLD.toArray(),
+  rusty: RUSTY_SLOT.toArray(),
+  bolt: BOLT_SLOT.toArray(),
+  notebookMeet: notebookLocalToWorld(0, NOTEBOOK_TOP_Y, 0),
+};
+
 /**
- * Bölüm 1 sonu: priz belirir, Rusty ve Bolt şarj olur, ardından jenerik.
+ * Bölüm 1 sonu: solda şarj ünitesi belirir → robotlar yürür → şarj.
  */
 export class ChargeFinale {
-  constructor({ scene, player, friend, subtitles, audio, emotion, camera }) {
+  constructor({ scene, player, friend, subtitles, audio, emotion, camera, beacon }) {
     this.scene = scene;
     this.player = player;
     this.friend = friend;
@@ -59,6 +68,7 @@ export class ChargeFinale {
     this.audio = audio;
     this.emotion = emotion;
     this.camera = camera;
+    this.beacon = beacon;
 
     this.active = false;
     this.phase = Phase.DONE;
@@ -66,26 +76,44 @@ export class ChargeFinale {
     this._phaseT = 0;
     this._onComplete = null;
     this._savedFov = RENDER.fov;
+    this._floorY = NOTEBOOK_TOP_Y + 0.02;
 
-    this.outlet = createPowerOutlet();
-    this.outlet.group.visible = false;
-    this.scene.add(this.outlet.group);
+    this.station = createChargeStation();
+    this.station.group.visible = false;
+    this.scene.add(this.station.group);
 
     this._camPos = new THREE.Vector3();
     this._camLook = new THREE.Vector3();
+    this._walkFromRusty = new THREE.Vector3();
+    this._walkFromBolt = new THREE.Vector3();
+    this._lineShownAt = 0;
+    this._lastSubtitleMs = 0;
     this._lastPulse = -1;
 
     this._chargeCables = [];
     this._buildChargeCables();
-    this._lineShownAt = 0;
+
+    this._indicators = [createChargeIndicator(), createChargeIndicator()];
+    for (const ind of this._indicators) {
+      ind.group.visible = false;
+      this.scene.add(ind.group);
+    }
+    this._indicatorOffset = new THREE.Vector3(0, 2.65, 0);
+    this._tmpWorld = new THREE.Vector3();
   }
 
-  _say(text, durationMs) {
+  _say(text) {
     this._lineShownAt = performance.now();
-    this.subtitles?.show?.(text, durationMs);
+    const perChar = NARRATION.perCharMs;
+    const hold = Math.max(NARRATION.holdShort, text.length * 32);
+    this._lastSubtitleMs = text.length * perChar + hold;
+    this.subtitles?.speak?.(text, {
+      perCharMs: perChar,
+      holdMs: hold,
+      onChar: () => this.audio?.robotBlip?.(0.85 + Math.random() * 0.2),
+    });
   }
 
-  /** Son altyazının süresi + ekstra bekleme doldu mu */
   _subtitleReady(extraMs = 0) {
     return (
       performance.now() - this._lineShownAt
@@ -105,13 +133,13 @@ export class ChargeFinale {
   _buildChargeCables() {
     const mat = new THREE.MeshStandardMaterial({
       color: 0x2a3438,
-      emissive: 0x55ee99,
-      emissiveIntensity: 0.5,
+      emissive: 0x44cc88,
+      emissiveIntensity: 0.35,
       roughness: 0.45,
     });
     for (let i = 0; i < 2; i++) {
       const cable = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.1, 0.1, 1, 6),
+        new THREE.CylinderGeometry(0.05, 0.05, 1, 5),
         mat.clone(),
       );
       cable.visible = false;
@@ -121,28 +149,31 @@ export class ChargeFinale {
   }
 
   _updateChargeCables() {
-    const plugWorld = new THREE.Vector3(-3.8, 7.55, -42.95);
+    const plugWorld = this.station.plugWorldPosition();
     const up = new THREE.Vector3(0, 1, 0);
     const roots = [this.player.root, this.friend?.root].filter(Boolean);
 
     roots.forEach((root, i) => {
       const cable = this._chargeCables[i];
       if (!cable) return;
-      cable.visible = true;
       const from = new THREE.Vector3(
-        root.position.x + 0.35,
-        root.position.y + 2.0,
-        root.position.z,
+        root.position.x + 0.12,
+        root.position.y + 1.35,
+        root.position.z + 0.2,
       );
       const dir = plugWorld.clone().sub(from);
       const len = dir.length();
-      if (len < 0.01) return;
+      if (len < 0.15 || len > 8) {
+        cable.visible = false;
+        return;
+      }
       dir.normalize();
+      cable.visible = true;
       cable.position.copy(from).addScaledVector(dir, len * 0.5);
       cable.scale.set(1, len, 1);
       cable.quaternion.setFromUnitVectors(up, dir);
       cable.material.emissiveIntensity =
-        0.5 + Math.sin(this._t * 5 + i) * 0.4;
+        0.35 + Math.sin(this._t * 4 + i) * 0.2;
     });
   }
 
@@ -161,7 +192,6 @@ export class ChargeFinale {
     this.camera.updateProjectionMatrix();
   }
 
-  /** Takip kamerasını tamamen bypass — doğrudan sinematik kadraj */
   applyCamera() {
     if (!this.camera) return;
     this.camera.position.copy(this._camPos);
@@ -170,10 +200,7 @@ export class ChargeFinale {
 
   start() {
     if (this.active) {
-      this.active = false;
-      this.phase = Phase.DONE;
-      this._hideChargeCables();
-      this._setFinaleFov(false);
+      this._finish(true);
     }
     this.active = true;
     this.phase = Phase.REVEAL;
@@ -182,23 +209,29 @@ export class ChargeFinale {
 
     if (this.friend) this.friend.state = "arrived";
 
-    this.outlet.group.position.copy(OUTLET_POS);
-    this.outlet.group.rotation.y = Math.PI * 0.48;
-    this.outlet.group.scale.setScalar(0.01);
-    this.outlet.group.visible = true;
-    this.outlet.setChargeGlow(0);
-    this.outlet.setPlugVisible(false);
+    this._walkFromRusty.copy(this.player.root.position);
+    this._walkFromBolt.copy(
+      this.friend ? this.friend.root.position : BOLT_SLOT,
+    );
+    this._walkFromRusty.y = this._floorY;
+    this._walkFromBolt.y = this._floorY;
+
+    this.station.group.position.copy(STATION_WORLD);
+    this.station.group.rotation.y = NOTEBOOK_PLACE.rotationY + Math.PI * 0.5;
+    this.station.group.scale.setScalar(0.01);
+    this.station.group.visible = true;
+    this.station.setChargeGlow(0);
+    this.station.setPlugVisible(false);
     this._hideChargeCables();
+    this._setIndicatorsVisible(false);
 
     this._camPos.copy(CAM_WIDE);
     this._camLook.copy(LOOK_WIDE);
     this._setFinaleFov(true);
     this.applyCamera();
 
-    this._lastSubtitleMs = SUBTITLE_MS.reveal;
     this._say(
-      "Defterlerin kenarında bir priz yanıp sönüyor. Eve dönmeden önce şarj şart.",
-      SUBTITLE_MS.reveal,
+      "Defterlerin solunda kablolu bir şarj ünitesi beliriyor. Eve dönmeden önce şarj şart.",
     );
     this.audio?.hopeSwell?.();
     this.emotion?.trigger?.("hope", 0.7);
@@ -209,76 +242,76 @@ export class ChargeFinale {
 
     this._t += dt;
     this._phaseT += dt;
-    this.outlet.animate(elapsedT);
+    this.station.animate(elapsedT);
 
     if (this.phase === Phase.REVEAL) {
-      const p = Math.min(1, this._phaseT / TIMING.revealAnim);
-      this.outlet.group.scale.setScalar(
-        THREE.MathUtils.smoothstep(0, 1, p) * 1.4,
+      const p = Math.min(1, this._phaseT / 1.6);
+      this.station.group.scale.setScalar(
+        THREE.MathUtils.smoothstep(p, 0, 1),
       );
       this._camPos.copy(CAM_WIDE);
       this._camLook.copy(LOOK_WIDE);
 
-      if (
-        p >= 1
-        && this._phaseT >= TIMING.revealMin
-        && this._subtitleReady(400)
-      ) {
+      if (this._phaseT >= TIMING.reveal && this._subtitleReady(500)) {
         this.phase = Phase.WALK;
         this._phaseT = 0;
-        this._lastSubtitleMs = SUBTITLE_MS.walk;
+        this._walkFromRusty.copy(this.player.root.position);
+        this._walkFromBolt.copy(
+          this.friend ? this.friend.root.position : BOLT_SLOT,
+        );
+        this._walkFromRusty.y = this._floorY;
+        this._walkFromBolt.y = this._floorY;
         this._say(
-          "Rusty ve Bolt prize doğru yürüyor. Küçük adımlar, büyük bir gece.",
-          SUBTITLE_MS.walk,
+          "Rusty ve Bolt üniteye doğru yürüyor. Küçük adımlar, büyük bir gece.",
         );
       }
       return;
     }
 
     if (this.phase === Phase.WALK) {
-      this._lerpActor(this.player.root, RUSTY_SLOT, dt, WALK_SPEED);
+      const t = Math.min(1, this._phaseT / TIMING.walk);
+      const ease = THREE.MathUtils.smoothstep(t, 0, 1);
+
+      this._lerpPos(this.player.root, this._walkFromRusty, RUSTY_SLOT, ease);
       if (this.friend) {
-        this._lerpActor(this.friend.root, BOLT_SLOT, dt, WALK_SPEED * 0.95);
+        this._lerpPos(this.friend.root, this._walkFromBolt, BOLT_SLOT, ease);
+      }
+
+      const moving = t < 0.98;
+      this.player.robot.update(dt, {
+        moving,
+        speed: moving ? 1.4 : 0,
+        jumping: false,
+        emotion: null,
+      });
+      if (this.friend) {
         this.friend.robot.update(dt, {
-          moving: true,
-          speed: WALK_SPEED,
+          moving,
+          speed: moving ? 1.4 : 0,
           jumping: false,
           emotion: null,
         });
       }
-      this.player.robot.update(dt, {
-        moving: true,
-        speed: WALK_SPEED,
-        jumping: false,
-        emotion: null,
-      });
-      this._faceToward(this.player.root, OUTLET_POS, dt);
-      if (this.friend) this._faceToward(this.friend.root, OUTLET_POS, dt);
+      this._faceToward(this.player.root, STATION_WORLD, dt);
+      if (this.friend) this._faceToward(this.friend.root, STATION_WORLD, dt);
 
-      this._camPos.copy(CAM_WIDE);
-      this._camLook.copy(LOOK_WIDE);
+      const camT = THREE.MathUtils.smoothstep(Math.min(1, t * 1.2), 0, 1);
+      this._camPos.lerpVectors(CAM_WIDE, CAM_CHARGE, camT * 0.35);
+      this._camLook.lerpVectors(LOOK_WIDE, LOOK_CHARGE, camT * 0.4);
 
-      const rustyDone =
-        this.player.root.position.distanceTo(RUSTY_SLOT) < 0.35;
-      const boltDone =
-        !this.friend || this.friend.root.position.distanceTo(BOLT_SLOT) < 0.35;
+      if (t > 0.72) this._fadeBeacon(dt * 1.8);
 
-      if (
-        rustyDone
-        && boltDone
-        && this._phaseT >= TIMING.walkMin
-        && this._subtitleReady(500)
-      ) {
+      if (t >= 1 && this._phaseT >= TIMING.walk && this._subtitleReady(600)) {
         this.player.root.position.copy(RUSTY_SLOT);
         if (this.friend) this.friend.root.position.copy(BOLT_SLOT);
         this.phase = Phase.CHARGE;
         this._phaseT = 0;
-        this.outlet.setPlugVisible(true);
-        this._updateChargeCables();
-        this._lastSubtitleMs = SUBTITLE_MS.plug;
+        this.station.setPlugVisible(true);
+        this._setIndicatorsVisible(true);
+        this._fadeBeacon(0);
+        this._snapFaceCamera();
         this._say(
-          "İki küçük fiş prize oturuyor. Gözler yavaşça parlıyor. Masa nefes alıyor.",
-          SUBTITLE_MS.plug,
+          "Fişler prize oturuyor. Gözler yavaşça parlıyor. Masa nefes alıyor.",
         );
         this.audio?.crtCableSnap?.();
       }
@@ -286,16 +319,22 @@ export class ChargeFinale {
     }
 
     if (this.phase === Phase.CHARGE) {
-      const p = Math.min(1, this._phaseT / TIMING.chargeDuration);
-      this.outlet.setChargeGlow(p);
-      this._updateChargeCables();
+      const p = Math.min(1, this._phaseT / TIMING.charge);
+      this.station.setChargeGlow(p);
+      this._fadeBeacon(dt);
 
-      // Hafif yakınlaşma ama asla bacak kadrajına düşme
-      const t = THREE.MathUtils.smoothstep(0, 1, Math.min(1, this._phaseT / 3.0));
-      this._camPos.lerpVectors(CAM_WIDE, CAM_CHARGE, t * 0.35);
-      this._camLook.lerpVectors(LOOK_WIDE, LOOK_CHARGE, t * 0.4);
+      if (this._phaseT >= TIMING.cableDelay) {
+        this._updateChargeCables();
+      }
 
-      this.emotion?.trigger?.("hope", 0.85);
+      const camBlend = THREE.MathUtils.smoothstep(
+        Math.min(1, this._phaseT / 2.8),
+        0,
+        1,
+      );
+      this._camPos.lerpVectors(CAM_WIDE, CAM_CHARGE, 0.35 + camBlend * 0.35);
+      this._camLook.lerpVectors(LOOK_WIDE, LOOK_CHARGE, 0.45 + camBlend * 0.35);
+
       this.emotion?.update?.(dt, { moving: false });
       const emo = this.emotion?.derived ?? null;
       this.player.robot.update(dt, {
@@ -312,22 +351,24 @@ export class ChargeFinale {
           emotion: emo,
         });
       }
-      this._faceToward(this.player.root, OUTLET_POS, dt * 0.5);
-      if (this.friend) this._faceToward(this.friend.root, OUTLET_POS, dt * 0.5);
+      const faceSpeed = 5.5 + camBlend * 4;
+      this._faceToward(this.player.root, this._camPos, dt * faceSpeed);
+      if (this.friend) this._faceToward(this.friend.root, this._camPos, dt * faceSpeed);
 
-      if (p > 0.2 && Math.floor(this._phaseT * 2) !== this._lastPulse) {
+      this._updateIndicators(p, elapsedT);
+
+      if (p > 0.25 && Math.floor(this._phaseT * 2) !== this._lastPulse) {
         this._lastPulse = Math.floor(this._phaseT * 2);
-        this.audio?.robotBlip?.(1.0 + p * 0.3);
+        this.audio?.robotBlip?.(1.0 + p * 0.25);
       }
 
-      if (p >= 1 && this._subtitleReady(800)) {
+      if (p >= 1 && this._subtitleReady(1000)) {
         this.phase = Phase.DONE;
         this._phaseT = 0;
         this._hideChargeCables();
-        this._lastSubtitleMs = SUBTITLE_MS.done;
+        this._setIndicatorsVisible(false);
         this._say(
           "Şarj tamam. Bölüm bir kapanıyor — ama yol henüz bitmedi.",
-          SUBTITLE_MS.done,
         );
         this.emotion?.trigger?.("memory", 0.6);
       }
@@ -335,38 +376,91 @@ export class ChargeFinale {
     }
 
     if (this.phase === Phase.DONE) {
-      if (this._phaseT >= TIMING.afterChargeMin && this._subtitleReady(0)) {
+      if (this._phaseT >= TIMING.done && this._subtitleReady(400)) {
         this._finish();
       }
     }
   }
 
-  _finish() {
+  _finish(silent = false) {
     if (!this.active) return;
     this.active = false;
+    this.station.group.visible = false;
     this._hideChargeCables();
+    this._setIndicatorsVisible(false);
+    this._fadeBeacon(0);
     this._setFinaleFov(false);
-    this._onComplete?.();
+    if (!silent) this._onComplete?.();
   }
 
-  _lerpActor(root, target, dt, speed) {
-    const tmp = new THREE.Vector3().subVectors(target, root.position);
-    const dist = tmp.length();
-    if (dist < 0.05) {
-      root.position.copy(target);
-      return;
-    }
-    tmp.normalize().multiplyScalar(Math.min(dist, speed * dt));
-    root.position.add(tmp);
-    root.position.y = THREE.MathUtils.lerp(root.position.y, target.y, dt * 4);
+  _lerpPos(root, from, to, t) {
+    root.position.lerpVectors(from, to, t);
+    root.position.y = this._floorY;
   }
 
   _faceToward(root, target, dt) {
     const tmp = new THREE.Vector3().subVectors(target, root.position);
+    tmp.y = 0;
+    if (tmp.lengthSq() < 0.01) return;
     const yaw = Math.atan2(tmp.x, tmp.z);
     let diff = yaw - root.rotation.y;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
-    root.rotation.y += diff * Math.min(1, dt * 5);
+    root.rotation.y += diff * Math.min(1, dt);
+  }
+
+  _snapFaceCamera() {
+    const roots = [this.player?.root, this.friend?.root].filter(Boolean);
+    for (const root of roots) {
+      const tmp = new THREE.Vector3().subVectors(this._camPos, root.position);
+      tmp.y = 0;
+      if (tmp.lengthSq() > 0.01) {
+        root.rotation.y = Math.atan2(tmp.x, tmp.z);
+      }
+    }
+  }
+
+  _fadeBeacon(dt = 0) {
+    const b = this.beacon;
+    if (!b) return;
+    b.armed = false;
+    if (dt <= 0) {
+      b._glow = 0;
+      if (b.orb?.visible) b.orb.visible = false;
+      if (b.halo?.visible) b.halo.visible = false;
+      return;
+    }
+    b._glow = Math.max(0, (b._glow ?? 0) - dt * 3.2);
+    if (b._glow < 0.02) {
+      if (b.orb?.visible) b.orb.visible = false;
+      if (b.halo?.visible) b.halo.visible = false;
+    }
+  }
+
+  _setIndicatorsVisible(on) {
+    for (const ind of this._indicators) {
+      ind.group.visible = on;
+      if (!on) ind.setGlow(0);
+    }
+  }
+
+  _updateIndicators(chargeP, elapsedT) {
+    const roots = [this.player?.root, this.friend?.root].filter(Boolean);
+    const fadeIn = THREE.MathUtils.smoothstep(
+      Math.min(1, this._phaseT / 1.2),
+      0,
+      1,
+    );
+    const glow = chargeP * fadeIn;
+
+    roots.forEach((root, i) => {
+      const ind = this._indicators[i];
+      if (!ind) return;
+      this._tmpWorld.copy(root.position).add(this._indicatorOffset);
+      ind.group.position.copy(this._tmpWorld);
+      ind.setGlow(glow);
+      ind.animate(elapsedT);
+      ind.faceCamera(this.camera);
+    });
   }
 }

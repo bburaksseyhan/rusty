@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { createRenderer, createCamera } from "./Renderer.js";
-import { ATMOSPHERE, PLAYER } from "./config.js";
+import { ATMOSPHERE, NARRATION, PLAYER } from "./config.js";
 
 import { createEnvironment } from "../assets/textures.js";
 import { setupLighting } from "../world/lighting.js";
@@ -129,13 +129,8 @@ const OPENING_LINES = [
 // cell loop and the battery transfer puzzle are complete.
 //
 // Notebook stack origin in Level1.js: [-10, 0, -40], top platform
-// reachable at y≈7. Bolt spawns a few units to the +X side and
-// walks across the top to meet Rusty.
-// Beacon hovers ~3u above the notebook top (y=4 world) so it
-// reads as a distant light from the desk; the actual meeting
-// point used for the proximity check is at y=7 too (close
-// enough — player on notebook top is ~3u away).
-const NOTEBOOK_MEET_POINT = [-10, 7.0, -40];
+// at NOTEBOOK_TOP_Y (≈4). Bolt spawns to the +X side and walks in.
+const NOTEBOOK_MEET_POINT = [-10, 4.05, -40];
 // Bolt SPAWNS at notebook surface (y=4), not the beacon point.
 // Friend.update locks y, so spawning at y=7 used to make him
 // glide in from mid-air — now he stands on the books.
@@ -434,6 +429,7 @@ export class Game {
       audio: this.audio,
       emotion: this.emotion,
       camera: this.camera,
+      beacon: this._beacon,
     }).onComplete(() => this._showEnding());
 
     this._bindLifecycle();
@@ -490,29 +486,32 @@ export class Game {
    * so subtitles never overlap, even if RUSTY_INTRO text changes.
    */
   _playIntro() {
-    const INITIAL_DELAY = 900;
-    const PER_CHAR      = 58;
-    const LINE_PAUSE    = 2400;
-    const FINAL_HOLD    = 3600;
+    const { perCharMs, holdShort, holdLong, lineGap, openingIntervalMs, openingLineMs } =
+      NARRATION;
+    const INITIAL_DELAY = 1200;
 
     let delay = INITIAL_DELAY;
     RUSTY_INTRO.forEach((line, i) => {
       const isLast = i === RUSTY_INTRO.length - 1;
       setTimeout(() => {
-        // Wave on the greeting line — "Welcome. I am Rusty."
         if (i === 0) this.player.robot.wave();
         this.subtitles.speak(line, {
-          perCharMs: PER_CHAR,
-          holdMs:    isLast ? FINAL_HOLD : 1400,
+          perCharMs,
+          holdMs: isLast ? holdLong : holdShort,
           onChar: () => this.audio.robotBlip(0.78 + Math.random() * 0.5),
         });
       }, delay);
-      delay += line.length * PER_CHAR + (isLast ? FINAL_HOLD : LINE_PAUSE);
+      delay +=
+        line.length * perCharMs + (isLast ? holdLong : holdShort + lineGap);
     });
 
     setTimeout(() => {
-      this.subtitles.scheduleOpening(OPENING_LINES, 14000, 8000);
-    }, delay + 9000);
+      this.subtitles.scheduleOpening(
+        OPENING_LINES,
+        openingIntervalMs,
+        openingLineMs,
+      );
+    }, delay + 4000);
   }
 
   _tick = () => {
@@ -628,8 +627,8 @@ export class Game {
         this.emotion.onMemoryFound();
         this.audio.memoryReveal();
         this.subtitles.speak(frag.def.subtitle, {
-          perCharMs: 50,
-          holdMs:    5000,
+          perCharMs: NARRATION.perCharMs,
+          holdMs: NARRATION.holdLong,
           onChar: () => {},
         });
         this.hintBadge.show(frag.def.hintText, 8000);
@@ -659,8 +658,8 @@ export class Game {
     this.objective.show();
     this.hintBadge.show(stage.goal, 14000);
     this.subtitles.speak(stage.speech, {
-      perCharMs: 38,
-      holdMs:    4000,
+      perCharMs: NARRATION.perCharMs,
+      holdMs: NARRATION.holdShort,
       onChar: () => this.audio.robotBlip(0.9 + Math.random() * 0.35),
     });
     // Briefing makes Rusty feel more confident / curious
@@ -699,8 +698,8 @@ export class Game {
     // Lock while speaking; unlock when subtitle hold ends
     this._storyLocked = true;
     const totalMs = this.subtitles.speak(segment.speech, {
-      perCharMs: 42,
-      holdMs:    4000,
+      perCharMs: NARRATION.perCharMs,
+      holdMs: NARRATION.holdShort,
       onChar: (ch) => {
         // Alternate pitch slightly per character for expressive robot voice
         const pitch = 0.75 + Math.random() * 0.55;
@@ -710,7 +709,7 @@ export class Game {
 
     // Show the poetic subtitle line after the speech ends
     setTimeout(() => {
-      this.subtitles.show(segment.subtitle, 5000);
+      this.subtitles.show(segment.subtitle, NARRATION.holdLong);
     }, totalMs + 200);
 
     // Unlock slightly before the full subtitle hold clears so it
@@ -983,9 +982,7 @@ export class Game {
    * acknowledge the reunion.
    */
   _playFriendDialogue() {
-    const PER_CHAR  = 42;
-    const LINE_GAP  = 1500;
-    const FINAL_HOLD = 4500;
+    const { perCharMs, holdShort, holdLong, lineGap } = NARRATION;
 
     // Bolt waves on arrival; Rusty hopeful spike
     this.emotion.trigger("memory", 0.8);
@@ -997,8 +994,8 @@ export class Game {
 
       setTimeout(() => {
         this.subtitles.speak(line.speech, {
-          perCharMs: PER_CHAR,
-          holdMs:    isLast ? FINAL_HOLD : 400,
+          perCharMs,
+          holdMs: isLast ? holdLong : holdShort,
           // Higher pitch range — Bolt is smaller, voice is brighter
           onChar: () => this.audio.robotBlip(1.35 + Math.random() * 0.55),
         });
@@ -1007,15 +1004,15 @@ export class Game {
         if (i === 1) this.player.robot.wave();
 
         // After each speech, show the poetic subtitle on a brief hold
-        const speechMs = line.speech.length * PER_CHAR;
+        const speechMs = line.speech.length * perCharMs;
         setTimeout(() => {
-          this.subtitles.show(line.subtitle, isLast ? 8000 : 2200);
-        }, speechMs + 250);
+          this.subtitles.show(line.subtitle, isLast ? holdLong + 2000 : holdShort);
+        }, speechMs + 400);
       }, delay);
 
-      // Reserve time: speech + subtitle hold + gap before next line
-      delay += line.speech.length * PER_CHAR
-             + (isLast ? FINAL_HOLD : 2400 + LINE_GAP);
+      delay +=
+        line.speech.length * perCharMs
+        + (isLast ? holdLong : holdShort + lineGap + 800);
     });
 
     // Son replikten sonra priz + şarj sahnesi, ardından jenerik.
@@ -1037,6 +1034,9 @@ export class Game {
       document.exitPointerLock?.();
     }
     if (this._beacon) this._beacon.armed = false;
+
+    document.getElementById("loading")?.classList.add("gone");
+    document.getElementById("title-screen")?.classList.add("gone");
 
     this._chargeFinale.start();
   }

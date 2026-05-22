@@ -146,9 +146,18 @@
       }
     }
 
-    function formatDate(iso) {
-      try { return new Date(iso + "Z").toLocaleString("tr-TR"); }
-      catch { return iso; }
+    function formatDate(raw) {
+      if (!raw) return "—";
+      const s = String(raw).trim();
+      if (!s) return "—";
+      let d;
+      if (s.includes("T")) {
+        d = new Date(s.endsWith("Z") || s.includes("+") ? s : s + "Z");
+      } else {
+        d = new Date(s.replace(" ", "T"));
+      }
+      if (Number.isNaN(d.getTime())) return s;
+      return d.toLocaleString("tr-TR");
     }
     function escapeHtml(s) {
       return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");

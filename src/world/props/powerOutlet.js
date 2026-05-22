@@ -119,11 +119,11 @@ export function createPowerOutlet() {
 
   function setChargeGlow(v) {
     chargeGlow = THREE.MathUtils.clamp(v, 0, 1);
-    glowMat.emissiveIntensity = chargeGlow * 3.5;
-    plugMat.emissiveIntensity = chargeGlow * 2.8;
-    glowMat.opacity = 0.4 + chargeGlow * 0.55;
-    led.material.emissiveIntensity = chargeGlow * 2.2;
-    chargeLight.intensity = chargeGlow * 4.5;
+    glowMat.emissiveIntensity = chargeGlow * 1.4;
+    plugMat.emissiveIntensity = chargeGlow * 1.1;
+    glowMat.opacity = 0.35 + chargeGlow * 0.4;
+    led.material.emissiveIntensity = chargeGlow * 1.0;
+    chargeLight.intensity = chargeGlow * 1.8;
   }
 
   function setPlugVisible(v) {
@@ -134,9 +134,9 @@ export function createPowerOutlet() {
   function animate(t) {
     if (chargeGlow > 0.01) {
       const pulse = 0.8 + Math.sin(t * 6) * 0.2;
-      glowMat.emissiveIntensity = chargeGlow * 3.5 * pulse;
-      chargeLight.intensity = chargeGlow * 4.5 * pulse;
-      plugMat.emissiveIntensity = chargeGlow * 2.8 * pulse;
+      glowMat.emissiveIntensity = chargeGlow * 1.4 * pulse;
+      chargeLight.intensity = chargeGlow * 1.8 * pulse;
+      plugMat.emissiveIntensity = chargeGlow * 1.1 * pulse;
     }
   }
 
