@@ -59,8 +59,10 @@ export const PLAYER = {
   startHealth: 3,
   radius: 0.7,
   height: 2.5,
-  walkSpeed: 9,
+  walkSpeed: 6,
   sprintSpeed: 18,
+  /** Yükseklik — yan duvar çarpışması (kafa tavanı takılmasın) */
+  collisionHeight: 1.65,
   jumpSpeed: 18,           // bumped from 16 — max jump height ~4.26u (was 3.37)
   gravity: 38,
   maxFallSpeed: 80,

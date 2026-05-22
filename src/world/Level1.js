@@ -11,13 +11,14 @@ import { createMonitor } from "./props/monitor.js";
 import { createMonitorStand } from "./props/monitorStand.js";
 import { createWindow } from "./props/window.js";
 import { createFan } from "./props/fan.js";
-import { createUsbCable, createUsbCableSnake } from "./props/usbCable.js";
+import { createUsbCable } from "./props/usbCable.js";
 import { createEnergyCell } from "./props/energyCell.js";
 import { createStickyNote } from "./props/stickyNote.js";
 import { createDust } from "./props/dust.js";
 import { createCrtSecretMonitor } from "./props/crtSecretMonitor.js";
 import { createBatteryTransferRig } from "./props/batteryTransferRig.js";
-import { createPencil, createBattery, createScrew } from "./props/decor.js";
+import { createPencil, createBattery, createScrew, createDeskNail } from "./props/decor.js";
+import { createScrewElectricRig } from "./props/screwElectricRig.js";
 
 // ============================================================
 //  LEVEL 1 — "The First Night on the Desk"
@@ -77,12 +78,12 @@ function addBackdrop(world) {
   });
   // window is decorative, no collider — but addProp tolerates that.
 
-  world.addProp(createMonitor(), { position: [0, 0, -78] });
+  world.monitorProp = world.addProp(createMonitor(), { position: [0, 0, -78] });
   world.addProp(createMonitorStand(), { position: [0, 0, -55] });
 
   const stickies = [
-    { p: [-12, 7.2, -73], r: 0.2, c: 0xfff58a, text: "DON'T\nFORGET" },
-    { p: [12, 9.0, -73], r: -0.3, c: 0xff9bb6, text: "feed\n  Rusty" },
+    { p: [-12, 7.2, -73], r: 0.2, c: 0xfff58a, text: "UNUT\nMA" },
+    { p: [12, 9.0, -73], r: -0.3, c: 0xff9bb6, text: "Rusty'yi\nbesle" },
     { p: [-4, 4.8, -73], r: 0.1, c: 0x9be0ff, text: "v0.12" },
   ];
   stickies.forEach((s) => {
@@ -117,6 +118,20 @@ function addBatteryTransfer(world) {
   world.batteryTransferRig = rig;
 }
 
+/** Not defteri yerleşimi — vidalar bu grubun yerel koordinatına göre konur */
+const NOTEBOOK_PLACE = Object.freeze({
+  position: [-10, 0, -40],
+  rotationY: 0.12,
+});
+
+function notebookLocalToWorld(lx, ly, lz) {
+  const [px, py, pz] = NOTEBOOK_PLACE.position;
+  const r = NOTEBOOK_PLACE.rotationY;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [px + lx * c + lz * s, py + ly, pz - lx * s + lz * c];
+}
+
 // ---- Main traversal chain -----------------------------------
 function addTraversalPath(world) {
   // 1. Spawn: keyboard
@@ -133,8 +148,6 @@ function addTraversalPath(world) {
       { thickness: 0.55, sag: 1.6 }
     )
   );
-  world.addProp(createUsbCableSnake());
-
   // 3. Mousepad + 4. Gaming mouse
   const pad = world.addProp(createMousepad(), { position: [8, 0, 0] });
   world.addProp(createGamingMouse(), {
@@ -145,56 +158,106 @@ function addTraversalPath(world) {
   // 5. Coffee mug
   world.addProp(createMug(), { position: [-14, 0, -20] });
 
-  // 6. Notebooks
+  // 6. Notebooks + sağ kenar vida devresi
   world.addProp(createNotebookStack(), {
-    position: [-10, 0, -40],
-    rotationY: 0.12,
+    position: [...NOTEBOOK_PLACE.position],
+    rotationY: NOTEBOOK_PLACE.rotationY,
   });
+  addNotebookScrewCircuit(world);
 }
 
 // ---- Hazards ------------------------------------------------
 function addHazards(world) {
-  world.addProp(createFan({ radius: 7, slowness: 1.0 }), {
-    position: [34, 0, 6],
-    rotationY: -Math.PI / 2,
-  });
-  world.addProp(
-    createFan({ radius: 6, slowness: 0.4, color: 0x1a1c20 }),
-    { position: [-40, 0, -10], rotationY: Math.PI / 2 }
+  world.fanProps.push(
+    world.addProp(createFan({ radius: 7, slowness: 1.0 }), {
+      position: [34, 0, 6],
+      rotationY: -Math.PI / 2,
+    }),
+  );
+  world.fanProps.push(
+    world.addProp(
+      createFan({ radius: 6, slowness: 0.4, color: 0x1a1c20 }),
+      { position: [-40, 0, -10], rotationY: Math.PI / 2 },
+    ),
   );
 }
 
 // ---- Set dressing -------------------------------------------
 function addSetDressing(world) {
-  world.addProp(createPencil(0xe8c060), { position: [20, 0.6, 4], rotationY: 0.9 });
-  world.addProp(createPencil(0x2a3f7d), {
-    position: [-22, 0.6, -28],
+  const pen1 = world.addProp(createPencil(0xe8c060), {
+    position: [20, 0, 4],
+    rotationY: 0.9,
+  });
+  const pen2 = world.addProp(createPencil(0x2a3f7d), {
+    position: [-22, 0, -28],
     rotationY: -0.5,
   });
+  world.pushableGroups.push(pen1.group, pen2.group);
 
-  // Green battery — moved out of the Battery Transfer Rig's
-  // footprint (which spans roughly x[-44..-19], z[-12..+8] in
-  // world space after its 153° rotation) into clear desk space.
-  // Steps now face +Z, the direction the player approaches from.
   const bat1 = world.addProp(createBattery(0x1a8a3a), {
     position: [-22, 0, -16],
     rotationY: 0,
   });
-  bat1.group; // (reserved spot for animation later)
+  bat1.group;
 
   const bat2 = world.addProp(createBattery(0x4a5a6a), {
-    position: [22, 1.6, -38],
+    position: [32, 0, -58],
+    rotationY: Math.PI / 2,
   });
   bat2.group.rotation.x = Math.PI / 2;
 
-  for (let i = 0; i < 32; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const r = 6 + Math.random() * 70;
-    world.addProp(createScrew(), {
-      position: [Math.cos(angle) * r, 0.12, Math.sin(angle) * r],
+  const NAIL_SPOTS = [
+    [12, 0, 12],
+    [16, 0, 8],
+    [6, 0, 18],
+    [-8, 0, 14],
+    [-14, 0, 6],
+    [4, 0, -8],
+    [18, 0, -6],
+    [-18, 0, -22],
+    [10, 0, -32],
+    [-6, 0, -36],
+  ];
+  for (const [x, y, z] of NAIL_SPOTS) {
+    const nail = createDeskNail();
+    world.addProp(nail, {
+      position: [x, y, z],
       rotationY: Math.random() * Math.PI,
     });
+    world.deskNailProps.push(nail);
   }
+
+}
+
+// ---- Not defteri sağı — vida devresi (defter yerel X/Z) -------
+function addNotebookScrewCircuit(world) {
+  // lx=15.5 → spiral halkaların (x≈12) dışında; lz defter derinliği içinde
+  const screwDefs = [
+    { lz: -5, variant: "tighten" },
+    { lz: -1, variant: "stomp" },
+    { lz: 2, variant: "tighten" },
+    { lz: 5, variant: "stomp" },
+  ];
+  const screws = [];
+
+  for (const def of screwDefs) {
+    const [x, y, z] = notebookLocalToWorld(15.5, 0, def.lz);
+    const screw = createScrew({ variant: def.variant });
+    world.addProp(screw, {
+      position: [x, y, z],
+      rotationY: NOTEBOOK_PLACE.rotationY + Math.PI / 2,
+    });
+    world.deskScrewProps.push(screw);
+    screws.push(screw);
+  }
+
+  const [ax, ay, az] = notebookLocalToWorld(9.5, 3.15, 0);
+  const notebookAnchor = new THREE.Vector3(ax, ay, az);
+
+  world.screwElectricRig = createScrewElectricRig(screws, {
+    notebookAnchor,
+  });
+  world.root.add(world.screwElectricRig.group);
 }
 
 // ---- Collectibles -------------------------------------------

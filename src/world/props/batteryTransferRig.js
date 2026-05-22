@@ -519,9 +519,9 @@ function drawCrtFace(ctx, phase, t) {
     ctx.stroke();
     ctx.fillStyle = "rgba(220,250,235,0.92)";
     ctx.font = "22px monospace";
-    ctx.fillText("CARRY POWER  →", w * 0.18, h * 0.3);
+    ctx.fillText("GÜÇ TAŞI  →", w * 0.18, h * 0.3);
     ctx.font = "14px monospace";
-    ctx.fillText("REUSE CELL · DRAWER 04", w * 0.22, h * 0.78);
+    ctx.fillText("HÜCRE YENİDEN · ÇEKMECE 04", w * 0.22, h * 0.78);
     ctx.restore();
   }
 

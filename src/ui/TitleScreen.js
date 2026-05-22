@@ -24,6 +24,11 @@ export class TitleScreen {
     this._startCb = cb;
   }
 
+  /** Dev / ?scene= — başlığı atla, oyuna gir */
+  forceStart() {
+    this._begin();
+  }
+
   _bind() {
     this._playBtn.addEventListener("click", () => this._begin());
     window.addEventListener("keydown", (e) => {

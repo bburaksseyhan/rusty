@@ -129,8 +129,11 @@ export class CameraRig {
     const bRaw = THREE.MathUtils.clamp(this._povBlend, 0, 1);
     if (bRaw > 0.002) {
       const tSmooth = bRaw * bRaw * (3 - 2 * bRaw);
-      this.camera.position.lerp(this._povCam, Math.min(1, tSmooth * 0.96));
-      this._blendLook.lerpVectors(this._lookCurrent, this._povLook, Math.min(1, tSmooth * 1.06));
+      // Yüksek blend (şarj finali vb.) — kuşbakışı takip kamerasını tamamen bırak
+      const tPos = bRaw > 0.9 ? 1 : tSmooth * 0.96;
+      const tLook = bRaw > 0.9 ? 1 : Math.min(1, tSmooth * 1.06);
+      this.camera.position.lerp(this._povCam, tPos);
+      this._blendLook.lerpVectors(this._lookCurrent, this._povLook, tLook);
       lookPoint = this._blendLook;
     }
 

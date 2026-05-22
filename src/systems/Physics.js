@@ -24,7 +24,7 @@ import * as THREE from "three";
 // ============================================================
 
 const STAND_EPSILON = 0.65;  // was 0.55 — more forgiving ledge landing
-const STEP_UP_MAX   = 1.5;   // was 1.15 — auto-step over taller lips/curbs
+const STEP_UP_MAX   = 1.85;  // kitap basamakları / monitor stand
 const SUPPORT_REACH = 0.85;  // was 0.75 — keeps player glued to platform tops
 
 export class Physics {
@@ -36,10 +36,10 @@ export class Physics {
    * Mutates `position` and `velocity` in place.
    * Returns `{ grounded, impactSpeed }`.
    */
-  move(position, velocity, colliders, dt, radius, height) {
+  move(position, velocity, colliders, dt, radius, height, wallHeight = height) {
     // Horizontal axes first (separated for clean corner sliding)
-    this._moveAxis(position, "x", velocity.x * dt, colliders, radius, height);
-    this._moveAxis(position, "z", velocity.z * dt, colliders, radius, height);
+    this._moveAxis(position, "x", velocity.x * dt, colliders, radius, wallHeight);
+    this._moveAxis(position, "z", velocity.z * dt, colliders, radius, wallHeight);
 
     // Vertical
     position.y += velocity.y * dt;

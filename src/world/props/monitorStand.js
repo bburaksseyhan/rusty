@@ -90,7 +90,7 @@ function addStepBooks(group) {
     // Step 4 — top y=11.5. 1.5u auto step-up from Step 3.
     // Sits flush against the stand top; final 1.0u to platform
     // is also auto step-up, so the climb terminates with a walk.
-    { x:  0, y: 5.75, z: -4.5, w: 5, h: 11.5, d: 5, c: 0x3a1010 },
+    { x:  0, y: 5.5, z: -4.2, w: 6, h: 11.0, d: 6, c: 0x3a1010 },
   ];
   books.forEach((b) => {
     const step = new THREE.Mesh(

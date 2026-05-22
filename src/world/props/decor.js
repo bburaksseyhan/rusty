@@ -19,7 +19,7 @@ export function createPencil(color = 0xe8c060) {
   body.rotation.z = Math.PI / 2;
   body.castShadow = body.receiveShadow = true;
   body.userData.collide = true;
-  body.userData.colliderType = "platform";
+  body.userData.colliderType = "wall";
   group.add(body);
 
   const tip = new THREE.Mesh(
@@ -172,26 +172,106 @@ export function createBattery(color = 0x1a8a3a) {
   return { group };
 }
 
-// ----- Screw -------------------------------------------------
-export function createScrew() {
+// ----- Desk nail (çivi) — başına çıkılır, inince çakılır ------
+export function createDeskNail() {
   const group = new THREE.Group();
-  group.name = "Screw";
+  group.name = "DeskNail";
   const mat = Materials.metalBright();
 
   const shaft = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18, 0.05, 1.0, 10),
+    new THREE.CylinderGeometry(0.12, 0.08, 0.9, 8),
     mat
   );
-  shaft.position.y = 0.5;
+  shaft.position.y = 0.45;
   shaft.castShadow = true;
   group.add(shaft);
 
   const head = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.35, 0.35, 0.15, 14),
+    new THREE.CylinderGeometry(0.42, 0.42, 0.12, 12),
     mat
   );
-  head.position.y = 1.0;
+  head.position.y = 0.95;
+  head.castShadow = true;
   group.add(head);
 
-  return { group };
+  // Görünmez platform — Rusty başın üstünde durabilsin (r≈0.7 ayak izi)
+  const STAND_PAD_Y = 1.02;
+  const standPad = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.78, 0.78, 0.1, 12),
+    mat
+  );
+  standPad.position.y = STAND_PAD_Y;
+  standPad.visible = false;
+  standPad.userData.collide = true;
+  standPad.userData.colliderType = "platform";
+  group.add(standPad);
+
+  return {
+    group,
+    head,
+    standPad,
+    headY: 0.95,
+    standPadY: STAND_PAD_Y,
+    hammered: false,
+    hammerAt: null,
+  };
+}
+
+// ----- Screw — tighten (E) veya stomp (çivi gibi zıpla) ----------
+export function createScrew({ variant = "tighten" } = {}) {
+  const group = new THREE.Group();
+  group.name = variant === "stomp" ? "ScrewStomp" : "Screw";
+  group.scale.setScalar(0.82);
+
+  const isStomp = variant === "stomp";
+  const mat = Materials.metalBright();
+  const shaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.22, 1.6, 10),
+    mat
+  );
+  shaft.position.y = 0.8;
+  shaft.castShadow = true;
+  group.add(shaft);
+
+  const headColor = isStomp ? 0xc9a050 : 0xc8ccd2;
+  const head = new THREE.Mesh(
+    new THREE.CylinderGeometry(isStomp ? 0.82 : 0.72, isStomp ? 0.82 : 0.72, 0.22, 14),
+    new THREE.MeshStandardMaterial({
+      color: headColor,
+      roughness: 0.4,
+      metalness: 0.92,
+      emissive: isStomp ? 0x443311 : 0x223344,
+      emissiveIntensity: isStomp ? 0.2 : 0.12,
+    })
+  );
+  head.position.y = 1.65;
+  head.castShadow = true;
+  group.add(head);
+
+  let standPad = null;
+  let standPadY = 0;
+  if (isStomp) {
+    standPadY = 1.02;
+    standPad = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.85, 0.85, 0.1, 12),
+      mat
+    );
+    standPad.position.y = standPadY;
+    standPad.visible = false;
+    standPad.userData.collide = true;
+    standPad.userData.colliderType = "platform";
+    group.add(standPad);
+  }
+
+  return {
+    group,
+    head,
+    standPad,
+    standPadY,
+    headY: 1.65,
+    variant,
+    tightened: false,
+    tightenAt: null,
+    _wasOnHead: false,
+  };
 }

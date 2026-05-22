@@ -25,6 +25,7 @@ export class Hazards {
     for (const h of this.hazards) {
       h.cooldown = Math.max(0, h.cooldown - dt);
       const d = h.position.distanceTo(playerPos);
+      if (h.active === false) continue;
       if (d < h.radius && h.cooldown <= 0 && this.player.hitCooldown <= 0) {
         this.player.health = Math.max(0, this.player.health - h.damage);
         this.player.hitCooldown = PLAYER.hitInvulnerability;

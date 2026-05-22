@@ -22,13 +22,19 @@ import { Hazards } from "../gameplay/Hazards.js";
 import { EmotionalTriggers } from "../gameplay/EmotionalTriggers.js";
 import { CrtMonitorPuzzle } from "../gameplay/CrtMonitorPuzzle.js";
 import { BatteryTransferPuzzle } from "../gameplay/BatteryTransferPuzzle.js";
+import { Pushables } from "../gameplay/Pushables.js";
+import { DeskNails } from "../gameplay/DeskNails.js";
+import { DeskToggles } from "../gameplay/DeskToggles.js";
 
 import { HUD } from "../ui/HUD.js";
 import { Subtitles } from "../ui/Subtitles.js";
 import { TitleScreen } from "../ui/TitleScreen.js";
 import { Objective } from "../ui/Objective.js";
 import { HintBadge } from "../ui/HintBadge.js";
+import { ControlsHelp } from "../ui/ControlsHelp.js";
+import { DeskScrews } from "../gameplay/DeskScrews.js";
 import { EndingScreen } from "../ui/EndingScreen.js";
+import { ChargeFinale } from "../gameplay/ChargeFinale.js";
 import { submitFeedback } from "../api/feedback.js";
 
 import {
@@ -45,62 +51,62 @@ const TMP_MEET = new THREE.Vector3();
 // ============================================================
 const LEVEL1_STAGES = [
   {
-    label: "RGB Keyboard",
+    label: "RGB Klavye",
     z: 30,
-    goal: "Cross the keys and reach the USB cable bridge.",
+    goal: "Tuşların üzerinden geç ve USB kablo köprüsüne ulaş.",
     speech:
-      "Beep. Systems online. I am on the keyboard. Walk across the keys and use the USB cable to descend toward the mouse pad.",
+      "Bip. Sistemler açık. Klavyenin üstündeyim. Tuşların üzerinden yürü ve mousepad'e inmek için USB kablosunu kullan.",
   },
   {
-    label: "USB Cable Bridge",
+    label: "USB Köprüsü",
     z: 17,
-    goal: "Walk across the cable bridge to the mouse pad.",
+    goal: "Kablo köprüsünden mousepad'e geç.",
     speech:
-      "Cable bridge detected. Tension nominal. Proceed forward, do not look down.",
+      "Kablo köprüsü algılandı. Gerilim normal. İleri git, aşağı bakma.",
   },
   {
-    label: "Mouse Pad",
+    label: "Mousepad",
     z: 6,
-    goal: "Climb the gaming mouse using its side steps.",
+    goal: "Yan basamaklardan oyun faresine tırman.",
     speech:
-      "Soft terrain. The gaming mouse is dead ahead. Use the side steps to climb up.",
+      "Yumuşak zemin. Oyun faresi tam önde. Yan basamaklardan yukarı çık.",
   },
   {
-    label: "Gaming Mouse",
+    label: "Oyun Faresi",
     z: -2,
-    goal: "Jump from the mouse to the coffee mug. Avoid the fan!",
+    goal: "Fareden kupa kulesine zıpla. Fanlara dikkat!",
     speech:
-      "Energy cell secured. Beware the spinning fan to the right. Continue forward to the coffee mug tower.",
+      "Enerji hücresi alındı. Sağdaki dönen fana dikkat. Kupa kulesine doğru ilerle.",
   },
   {
-    label: "Coffee Mug Tower",
+    label: "Kupa Kulesi",
     z: -20,
-    goal: "Use the mug ledges to reach the rim.",
+    goal: "Kupa kenarındaki çıkıntılardan kenara çık.",
     speech:
-      "Porcelain tower. The ledges on the side are steps. Jump from ledge to ledge to reach the rim. Coffee detected. Probably cold.",
+      "Porselen kule. Yan çıkıntılar basamak. Basamaktan basamağa zıpla, kenara ulaş. Kahve var. Muhtemelen soğuk.",
   },
   {
-    label: "Notebook Stack",
+    label: "Defter Yığını",
     z: -40,
-    goal: "Hop spine to spine up the notebook stack.",
+    goal: "Spirallerden spirale defter yığınına tırman.",
     speech:
-      "Paper mountains ahead. Hop spine to spine. The monitor stand is the final destination.",
+      "İleride kağıt dağları. Spiralden spirale. Son durak monitör standı.",
   },
   {
-    label: "Monitor Stand",
+    label: "Monitör Standı",
     z: -55,
-    goal: "Climb the step books to the monitor stand platform.",
+    goal: "Basamak kitaplardan monitör platformuna çık.",
     speech:
-      "Almost home. Climb the step books to the monitor stand. The last cell is up there. Beep boop.",
+      "Neredeyse evde. Basamak kitaplardan monitör standına çık. Son hücre yukarıda. Bip bop.",
   },
 ];
 
 const OPENING_LINES = [
-  "Rusty wakes up on the keyboard. The whole desk is asleep.",
-  "Across the cable bridge, the mousepad shines like a runway.",
-  "The mug rises like a tower. The notebooks are mountains.",
-  "Up there — that's the monitor stand. That's the way home.",
-  "Outside the window, it's raining. Somewhere a fan keeps turning.",
+  "Rusty klavyede uyanıyor. Bütün masa uyuyor.",
+  "Kablo köprüsünün ötesinde mousepad bir pist gibi parlıyor.",
+  "Kupa bir kule gibi yükseliyor. Defterler dağ.",
+  "Yukarıda — monitör standı. Eve giden yol orası.",
+  "Pencerenin dışında yağmur. Bir yerde fan dönmeye devam ediyor.",
 ];
 
 // ============================================================
@@ -140,40 +146,40 @@ const FRIEND_DELAY_MS     = 1400;                  // beat between proximity →
 const FRIEND_DIALOGUE = [
   {
     speech:
-      "Rusty! You did it. You actually did it. " +
-      "I have been waiting one thousand and forty-seven days.",
-    subtitle: "A second light blinks on across the desk. Blue, this time.",
+      "Rusty! Başardın. Gerçekten başardın. " +
+      "Bin kırk yedi gündür bekliyordum.",
+    subtitle: "Masada ikinci bir ışık yanıp sönüyor. Bu sefer mavi.",
   },
   {
     speech:
-      "My name is Bolt. Kai built me right after you — smaller, " +
-      "second. Never quite finished. They hid me behind the monitor.",
-    subtitle: "Two robots. Same maker. Same waiting.",
+      "Benim adım Bolt. Kai beni senden hemen sonra yaptı — daha küçük, " +
+      "ikinci. Tam bitmedi. Beni monitörün arkasına sakladılar.",
+    subtitle: "İki robot. Aynı yapımcı. Aynı bekleme.",
   },
   {
     speech:
-      "Your cells woke me up. I felt the current the moment you " +
-      "reached the top. Thank you.",
-    subtitle: "Energy travels through old wires. Across years.",
+      "Hücrelerin beni uyandırdı. Zirveye ulaştığın an akımı hissettim. " +
+      "Teşekkürler.",
+    subtitle: "Enerji eski tellerden geçer. Yıllar boyunca.",
   },
   {
     speech:
-      "Listen. The desk is just the first room. Tomorrow we go further. " +
-      "Past the edge. Down to the carpet.",
-    subtitle: "Chapter Two: The Floor.",
+      "Dinle. Masa sadece ilk oda. Yarın daha uzağa gideceğiz. " +
+      "Kenarın ötesine. Halıya aşağı.",
+    subtitle: "Bölüm İki: Zemin.",
   },
   {
     speech:
-      "Through the hallway. Up the stairs. There is a door — " +
-      "Kai's bedroom. It is closed, but there is a gap underneath. " +
-      "We can fit.",
-    subtitle: "Where the road home actually begins.",
+      "Koridordan. Merdivenlerden yukarı. Bir kapı var — " +
+      "Kai'nin yatak odası. Kapalı ama altında bir boşluk var. " +
+      "Sığarız.",
+    subtitle: "Eve giden yolun gerçekten başladığı yer.",
   },
   {
     speech:
-      "Rest now, Rusty. Charge your cells. When the lamp clicks on " +
-      "again — we leave together.",
-    subtitle: "End of Chapter One.",
+      "Şimdi dinlen Rusty. Hücrelerini şarj et. Lamba yeniden tık diye yandığında " +
+      "— birlikte gideceğiz.",
+    subtitle: "Birinci bölümün sonu.",
   },
 ];
 
@@ -186,10 +192,10 @@ const FRIEND_DIALOGUE = [
 //  background (Kai, 1,047 days, the note) lives in RUSTY_STORY.
 // ============================================================
 const RUSTY_INTRO = [
-  "Hello. Welcome. I am Rusty. Beep… boop.",
-  "I was built on this desk. Three weeks, by a friend named Kai.",
-  "I woke up tonight after a long, long sleep. I am looking for the way home.",
-  "Press Q if you want to hear my whole story. Press E if you get stuck.",
+  "Merhaba. Hoş geldin. Ben Rusty. Bip… bop.",
+  "Bu masada yapıldım. Üç hafta, Kai adında bir arkadaş tarafından.",
+  "Bu gece çok uzun bir uykudan sonra uyandım. Eve giden yolu arıyorum.",
+  "Tüm hikâyemi duymak için Q'ya bas. Takılırsan E'ye bas.",
 ];
 
 // Memory fragment pickup radius (world units)
@@ -213,52 +219,52 @@ const FRAGMENT_PICKUP_RADIUS = 3.5;
 const RUSTY_STORY = [
   {
     speech:
-      "My name is Rusty. Serial number… unknown. " +
-      "Manufacturer: one human. Age seventeen. Name: Kai.",
+      "Benim adım Rusty. Seri numarası… bilinmiyor. " +
+      "Üretici: bir insan. On yedi yaşında. Adı: Kai.",
     subtitle:
-      "Someone built me. Carefully. With small hands and a lot of patience.",
+      "Biri beni yaptı. Özenle. Küçük ellerle ve çok sabırla.",
   },
   {
     speech:
-      "I was carved from this desk. That pencil over there — " +
-      "I recognise its smell. Those shavings are part of me.",
+      "Bu masadan oyuldum. Şuradaki kalem — " +
+      "kokusunu tanıyorum. O talaşlar benim parçam.",
     subtitle:
-      "I am made from this place. Every grain of wood. Every scratch.",
+      "Bu yerden yapıldım. Her ahşap damarı. Her çizik.",
   },
   {
     speech:
-      "For two years I lived on a keychain. I went everywhere. " +
-      "School. Coffee shops. A bus at three in the morning.",
+      "İki yıl anahtarlıkta yaşadım. Her yere gittim. " +
+      "Okul. Kahve dükkanları. Sabah üçte bir otobüs.",
     subtitle:
-      "I have seen rain on windows. Exam papers. A first sunrise after no sleep.",
+      "Pencerede yağmur gördüm. Sınav kağıtları. Uykusuzluktan sonra ilk gün doğumu.",
   },
   {
     speech:
-      "Then one Tuesday… they left. Fast. I saw their hands shake " +
-      "when they packed. Only one bag.",
+      "Sonra bir Salı… gittiler. Hızlı. Çantayı toplarken " +
+      "ellerinin titrediğini gördüm. Tek bir çanta.",
     subtitle:
-      "The door closed. The keys landed here. The silence began.",
+      "Kapı kapandı. Anahtarlar buraya düştü. Sessizlik başladı.",
   },
   {
     speech:
-      "They said: I will be back for you. " +
-      "That was one thousand and forty-seven days ago. I counted.",
+      "Dediler: senin için geri döneceğim. " +
+      "O gün bin kırk yedi gün önceydi. Saydım.",
     subtitle:
-      "One thousand and forty-seven mornings of waiting. The lamp never came back on.",
+      "Bin kırk yedi sabah bekleme. Lamba bir daha yanmadı.",
   },
   {
     speech:
-      "There is a note somewhere on this desk. I have memorised it. " +
-      "It says: find your way home, little one.",
+      "Bu masada bir yerde bir not var. Ezberledim. " +
+      "Diyor ki: eve yolunu bul, küçük olan.",
     subtitle:
-      "A note left for a robot who might one day wake up and read it.",
+      "Bir gün uyanıp okuyabilecek bir robota bırakılmış not.",
   },
   {
     speech:
-      "I do not know where home is. But I know I was made to find out. " +
-      "And I know… Kai is still out there. Somewhere.",
+      "Evin nerede olduğunu bilmiyorum. Ama bulmak için yapıldığımı biliyorum. " +
+      "Ve biliyorum… Kai hâlâ dışarıda. Bir yerde.",
     subtitle:
-      "Purpose. That is what Kai gave me. Purpose, and a very good wave.",
+      "Amaç. Kai bana bunu verdi. Amaç ve çok iyi bir el sallama.",
   },
 ];
 
@@ -315,6 +321,7 @@ export class Game {
     this.objective.setStages(LEVEL1_STAGES.map((s) => s.label));
     this.objective.setCurrent(0);
     this.hintBadge = new HintBadge();
+    this.controlsHelp = new ControlsHelp();
     this.endingScreen = new EndingScreen();
 
     this.crtMonitorPuzzle = this.world.crtSecret
@@ -354,6 +361,42 @@ export class Game {
       this._onHit()
     );
 
+    this.pushables = new Pushables();
+    for (const g of this.world.pushableGroups) {
+      this.pushables.register(g, { radius: 11, pushStrength: 4 });
+    }
+
+    this.deskNails = new DeskNails({
+      hintBadge: this.hintBadge,
+      audio: this.audio,
+      subtitles: this.subtitles,
+    });
+    for (const nail of this.world.deskNailProps) {
+      this.deskNails.add(nail);
+    }
+
+    this.deskToggles = new DeskToggles({
+      subtitles: this.subtitles,
+      audio: this.audio,
+    });
+    for (const fan of this.world.fanProps) {
+      this.deskToggles.addFan(fan);
+    }
+    if (this.world.monitorProp) {
+      this.deskToggles.addMonitor(this.world.monitorProp);
+    }
+
+    this.deskScrews = new DeskScrews({
+      subtitles: this.subtitles,
+      audio: this.audio,
+      hintBadge: this.hintBadge,
+      electricRig: this.world.screwElectricRig,
+      onCountChange: (current, total) => this.hud.setScrews(current, total),
+    });
+    for (const screw of this.world.deskScrewProps) {
+      this.deskScrews.add(screw);
+    }
+
     // Pil aktarım puzzle'ı bittiğinde de finale geçit kontrolüne haber ver.
     this.batteryTransferPuzzle?.onComplete?.(() => this._onBatteryComplete());
 
@@ -383,6 +426,16 @@ export class Game {
     this.scene.add(this._friend.root);
     this._friendSummoned = false;
 
+    this._chargeFinale = new ChargeFinale({
+      scene: this.scene,
+      player: this.player,
+      friend: this._friend,
+      subtitles: this.subtitles,
+      audio: this.audio,
+      emotion: this.emotion,
+      camera: this.camera,
+    }).onComplete(() => this._showEnding());
+
     this._bindLifecycle();
   }
 
@@ -391,9 +444,27 @@ export class Game {
     this._tick();
   }
 
+  /** Dev araçları: başlık + intro atlanır, oyun döngüsü açık */
+  _devForcePlay() {
+    this.title.forceStart();
+    if (!this._started) {
+      this._started = true;
+      this.controlsHelp.setVisible(true);
+      this.audio.init();
+      this.audio.startMusic();
+    }
+    this.subtitles.hide();
+    this.input.setEnabled(true);
+    this._endingLocked = false;
+    if (document.pointerLockElement) {
+      document.exitPointerLock?.();
+    }
+  }
+
   // ----------------------------------------------------------
   _begin() {
     this._started = true;
+    this.controlsHelp.setVisible(true);
     this.audio.init();
     this.audio.startMusic();
 
@@ -419,10 +490,10 @@ export class Game {
    * so subtitles never overlap, even if RUSTY_INTRO text changes.
    */
   _playIntro() {
-    const INITIAL_DELAY = 900;   // beat after title fades
-    const PER_CHAR      = 42;
-    const LINE_PAUSE    = 1200;  // gap between intro lines
-    const FINAL_HOLD    = 2800;  // last line stays a little longer
+    const INITIAL_DELAY = 900;
+    const PER_CHAR      = 58;
+    const LINE_PAUSE    = 2400;
+    const FINAL_HOLD    = 3600;
 
     let delay = INITIAL_DELAY;
     RUSTY_INTRO.forEach((line, i) => {
@@ -432,28 +503,32 @@ export class Game {
         if (i === 0) this.player.robot.wave();
         this.subtitles.speak(line, {
           perCharMs: PER_CHAR,
-          holdMs:    isLast ? FINAL_HOLD : 500,
+          holdMs:    isLast ? FINAL_HOLD : 1400,
           onChar: () => this.audio.robotBlip(0.78 + Math.random() * 0.5),
         });
       }, delay);
       delay += line.length * PER_CHAR + (isLast ? FINAL_HOLD : LINE_PAUSE);
     });
 
-    // Persistent control hint, then ambient world narration
     setTimeout(() => {
-      this.subtitles.show(
-        "Press E for hints  •  Press Q to hear my story.",
-        5500
-      );
-    }, delay);
-    setTimeout(() => {
-      this.subtitles.scheduleOpening(OPENING_LINES, 8000);
-    }, delay + 6500);
+      this.subtitles.scheduleOpening(OPENING_LINES, 14000, 8000);
+    }, delay + 9000);
   }
 
   _tick = () => {
     const dt = Math.min(0.05, this._clock.getDelta());
     const t  = this._clock.elapsedTime;
+
+    if (this._started && this._chargeFinale?.active) {
+      this.emotion.update(dt, { moving: false });
+      this._chargeFinale.update(dt, t);
+      this._chargeFinale.applyCamera();
+      this.world.update(t, dt);
+      if (this._beacon) this._updateBeacon(dt, t);
+      this.postFX.render(dt);
+      requestAnimationFrame(this._tick);
+      return;
+    }
 
     if (this._started && !this._endingLocked) {
       const moving = Math.hypot(
@@ -488,6 +563,14 @@ export class Game {
       this._updateBeacon(dt, t);
       this._updateFinaleProximity();
 
+      this.pushables?.update(
+        dt,
+        this.player.root.position,
+        PLAYER.radius,
+      );
+      this.deskNails?.update(this.player, t);
+      this.deskScrews?.update(this.player, t, dt);
+
       // ---- Camera ----
       // forwardIntent = how aligned the player's horizontal velocity is
       // with the camera-forward axis. Drives the auto-align gate so
@@ -508,31 +591,12 @@ export class Game {
         facingYaw: this.player.root.rotation.y,
         forwardIntent,
       });
-      this.postFX.focusOn(this.player.bodyWorldPos, this.camera.position);
-
-      // ---- PostFX emotion-driven DOF tweak ----
-      this._applyEmotionToPostFX();
-
       this._updateCurrentStage();
     }
 
     this.postFX.render(dt);
     requestAnimationFrame(this._tick);
   };
-
-  // ----------------------------------------------------------
-  //  Emotion → Post-FX
-  // ----------------------------------------------------------
-  _applyEmotionToPostFX() {
-    const fear = this.emotion.e.fear;
-    const hope = this.emotion.e.hope;
-
-    // Fear makes everything slightly blurrier (shallow DOF)
-    if (this.postFX.dof?.cocMaterial) {
-      this.postFX.dof.cocMaterial.uniforms.focusRange.value =
-        6.0 + fear * 3.0 - hope * 1.0;
-    }
-  }
 
   // ----------------------------------------------------------
   //  Memory Fragments
@@ -583,9 +647,13 @@ export class Game {
     const pressed = this.input.consumeInteract();
     if (!pressed) return;
 
-    // Bulmacalar E'yi yakalarsa varsayılan hedef ipucunu bastır.
-    if (this.crtMonitorPuzzle?.tryInteract?.()) return;
+    const t = this._clock.elapsedTime;
+    const pPos = this.player.root.position;
+    // Vida → pil/CRT bulmacaları → fan/monitör (atölyede fan E'yi yemesin)
+    if (this.deskScrews?.tryInteract(pPos, t)) return;
     if (this.batteryTransferPuzzle?.tryInteract?.()) return;
+    if (this.crtMonitorPuzzle?.tryInteract?.()) return;
+    if (this.deskToggles?.tryInteract(pPos)) return;
 
     const stage = LEVEL1_STAGES[this._currentStage];
     this.objective.show();
@@ -721,7 +789,7 @@ export class Game {
     this.emotion.gainConfidence(0.2);
     this.audio.hopeSwell();
     this.subtitles.show(
-      "All cells gathered. Rusty hums softly — one task remains in the workshop.",
+      "Tüm hücreler toplandı. Rusty hafifçe uğulduyor — atölyede bir görev kaldı.",
       5200,
     );
     this._tryArmFinale();
@@ -732,7 +800,7 @@ export class Game {
     this._batteryDone = true;
     this.emotion.trigger("memory", 0.7);
     this.subtitles.show(
-      "The workshop drawer rests open. The current sings through old copper.",
+      "Atölye çekmecesi açık duruyor. Akım eski bakırda şarkı söylüyor.",
       4600,
     );
     this._tryArmFinale();
@@ -758,11 +826,11 @@ export class Game {
     this.emotion.gainConfidence(0.15);
 
     this.subtitles.show(
-      "A blue light blinks awake on top of the notebook stack. Something is up there.",
+      "Defter yığınının üstünde mavi bir ışık yanıp sönüyor. Orada bir şey var.",
       6200,
     );
     this.hintBadge.show(
-      "Climb to the notebook stack — a friend is waiting at the top.",
+      "Defter yığınına çık — üstte bir arkadaş bekliyor.",
       16000,
     );
   }
@@ -817,7 +885,7 @@ export class Game {
     // Soft chime as Bolt powers on
     this.audio.memoryReveal();
     this.subtitles.show(
-      "A second light flickers awake on the paper mountain beside Rusty.",
+      "Rusty'nin yanındaki kağıt dağında ikinci bir ışık titreyerek uyanıyor.",
       4500,
     );
 
@@ -950,9 +1018,27 @@ export class Game {
              + (isLast ? FINAL_HOLD : 2400 + LINE_GAP);
     });
 
-    // Once Bolt's final line has fully held on screen, slip into the
-    // closing cinematic: fade-to-black + Chapter One credits + survey.
-    setTimeout(() => this._showEnding(), delay + 800);
+    // Son replikten sonra priz + şarj sahnesi, ardından jenerik.
+    setTimeout(() => this._startChargeFinale(), delay + 800);
+  }
+
+  /**
+   * Bölüm 1 kapanışı — priz belirir, Rusty ve Bolt şarj olur.
+   */
+  _startChargeFinale() {
+    if (this._chargeStarted || this._endingShown) return;
+    this._chargeStarted = true;
+
+    this.hintBadge.hide();
+    this.controlsHelp.setVisible(false);
+    this.objective.hide?.();
+    this.input.setEnabled(false);
+    if (document.pointerLockElement) {
+      document.exitPointerLock?.();
+    }
+    if (this._beacon) this._beacon.armed = false;
+
+    this._chargeFinale.start();
   }
 
   /**
@@ -964,6 +1050,7 @@ export class Game {
     if (this._endingShown) return;
     this._endingShown = true;
     this._endingLocked = true;
+    this.controlsHelp.setVisible(false);
 
     this.input.setEnabled(false);
     if (document.pointerLockElement) {
@@ -996,11 +1083,11 @@ export class Game {
 
 function _pickupLine(picked, total, confidence) {
   const lines = [
-    "An energy cell hums to life inside Rusty…",
-    "Warmth. Something clicks into place.",
-    `${picked} of ${total}. The path grows clearer.`,
-    "Rusty's eyes glow brighter for a moment.",
-    "Each piece found is a step toward something.",
+    "Rusty'nin içinde bir enerji hücresi uğulduyor…",
+    "Sıcaklık. Bir şey yerine oturuyor.",
+    `${picked} / ${total}. Yol netleşiyor.`,
+    "Rusty'nin gözleri bir an daha parlak yanıyor.",
+    "Bulunan her parça bir adım daha.",
   ];
   // Early game: wonder. Late game: purposeful.
   const idx = confidence < 0.4
@@ -1010,7 +1097,7 @@ function _pickupLine(picked, total, confidence) {
 }
 
 function _hitLine(fearLevel) {
-  if (fearLevel > 0.6) return "That hurt. Everything feels very large right now…";
-  if (fearLevel > 0.3) return "The fan blades! Be careful out there.";
-  return "Careful — those blades are sharp.";
+  if (fearLevel > 0.6) return "Acıdı. Şu an her şey çok büyük hissediliyor…";
+  if (fearLevel > 0.3) return "Fan kanatları! Dikkatli ol.";
+  return "Dikkat — o kanatlar keskin.";
 }

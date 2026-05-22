@@ -139,6 +139,60 @@ html, body, #app {
   filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.6));
 }
 
+.screws {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(8, 12, 18, 0.55);
+  border: 1px solid rgba(255, 200, 120, 0.35);
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ffe3b8;
+}
+
+.screw-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 200, 120, 0.75);
+  margin-right: -2px;
+}
+
+.screw-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #d8dde8, #8a95a8);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.screw-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.screws.screws--pulse {
+  animation: screw-pulse 0.55s ease-out;
+  border-color: rgba(255, 220, 140, 0.75);
+}
+
+@keyframes screw-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.cell-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(106, 209, 255, 0.75);
+  margin-right: -2px;
+}
+
 .cells {
   display: flex;
   align-items: center;
@@ -186,6 +240,70 @@ html, body, #app {
   border-radius: 50%;
   background: #2a2c30;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
+}
+
+/* Kalıcı tuş kılavuzu — sol alt */
+.controls-help {
+  position: absolute;
+  left: 18px;
+  bottom: 22px;
+  max-width: min(320px, 42vw);
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  background: rgba(8, 12, 18, 0.72);
+  border: 1px solid rgba(255, 220, 170, 0.2);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 500ms ease, transform 500ms ease;
+  pointer-events: none;
+}
+
+.controls-help.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.controls-help-title {
+  font-size: 9px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(255, 184, 106, 0.9);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.controls-help-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.controls-help-list li {
+  display: grid;
+  grid-template-columns: 5.8em 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(241, 230, 205, 0.92);
+}
+
+.controls-help-list kbd {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #d8f7ff;
+  background: rgba(106, 209, 255, 0.12);
+  border: 1px solid rgba(106, 209, 255, 0.35);
+  border-radius: 5px;
+  padding: 2px 6px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Subtitle / story whisper */
@@ -604,7 +722,20 @@ html, body, #app {
     height: 26px;
   }
   .hint-badge { top: 108px; }
-  .hud-right { right: 12px; }
+  .hud-right { right: 12px; gap: 8px; }
+  .screws { padding: 5px 8px; font-size: 11px; }
+  .screw-label,
+  .cell-label { display: none; }
+  .controls-help {
+    left: 10px;
+    bottom: 14px;
+    max-width: 92vw;
+    padding: 8px 10px;
+  }
+  .controls-help-list li {
+    grid-template-columns: 4.8em 1fr;
+    font-size: 10px;
+  }
   .hint { display: none; }
   .subtitle { font-size: 13px; bottom: 50px; padding: 0 14px; }
 }
@@ -619,17 +750,28 @@ html, body, #app {
   z-index: 1000;
   background:
     radial-gradient(ellipse at 50% 60%, rgba(20, 28, 40, 0.92) 0%, #000 75%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
+  display: block;
   padding: 40px 24px;
   overflow: hidden;
   animation: ending-fade-in 1.6s ease-out both;
   font-family: inherit;
   color: #f3ecd8;
   pointer-events: auto;
+}
+
+/* Jenerik ve anket aynı merkezde — üst üste iki kutu görünmesin */
+.ending-credits,
+.ending-survey-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+.ending-survey-card.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%);
 }
 
 .ending-out {
@@ -652,14 +794,15 @@ html, body, #app {
   align-items: center;
   gap: 18px;
   animation: ending-roll-up 6s ease-out both;
-  max-width: 720px;
+  max-width: min(720px, 92vw);
+  width: max-content;
 }
 
 @keyframes ending-roll-up {
-  0%   { opacity: 0; transform: translateY(40px); }
-  18%  { opacity: 1; transform: translateY(0); }
-  82%  { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0.45; transform: translateY(-30px); }
+  0%   { opacity: 0; transform: translate(-50%, calc(-50% + 36px)); }
+  18%  { opacity: 1; transform: translate(-50%, -50%); }
+  82%  { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 .ending-title {
@@ -721,10 +864,14 @@ html, body, #app {
 /* --- Credits fade-out ----------------------------------- */
 
 .ending-credits-out {
-  animation: ending-credits-out 0.6s ease-in forwards !important;
+  animation: ending-credits-out 0.7s ease-in forwards !important;
+  pointer-events: none;
 }
 @keyframes ending-credits-out {
-  to { opacity: 0; transform: translateY(-30px); }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 24px));
+  }
 }
 
 /* --- Survey card ----------------------------------------- */
@@ -743,13 +890,7 @@ html, body, #app {
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(10px);
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 600ms ease-out, transform 600ms ease-out;
-}
-
-.ending-survey-card.visible {
-  opacity: 1;
-  transform: translateY(0);
+  transition: opacity 600ms ease-out;
 }
 
 .ending-survey-eyebrow {
@@ -949,8 +1090,14 @@ html, body, #app {
 }
 
 @keyframes thanks-pop {
-  from { transform: scale(0.94); opacity: 0; }
-  to   { transform: scale(1.00); opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .ending-thanks-title {

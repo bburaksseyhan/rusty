@@ -374,14 +374,14 @@ function arrowsAndDeskMap(ctx, w, h, glitch) {
   arrow(ctx, ax, ay, ax + w * 0.18, ay - h * 0.12);
   ctx.font = `${15 + Math.round(Math.abs(Math.sin(glitch)))}px monospace`;
   ctx.fillStyle = "rgba(240,246,238,0.65)";
-  ctx.fillText("KEYBOARD ⇢ USB ⇢ PAD ⇢ MOUSE", w * 0.06, ay - h * 0.14);
+  ctx.fillText("KLAVYE ⇢ USB ⇢ PAD ⇢ FARE", w * 0.06, ay - h * 0.14);
   arrow(ctx, w * 0.22, h * 0.42, w * 0.65, h * 0.86);
-  ctx.fillText("⇣ MUG  ⇣ BOOKS ⇣ FINAL STAND  (-Z corridor)", w * 0.1, h * 0.9);
+  ctx.fillText("⇣ KUPA  ⇣ DEFTER  ⇣ SON DURAK  (-Z koridor)", w * 0.1, h * 0.9);
   dashGrid(ctx, w, h);
 
   ctx.fillStyle = "rgba(245,238,218,0.38)";
   ctx.font = "12px monospace";
-  ctx.fillText("↓ hidden cable channel under staples", w * 0.5, h * 0.2);
+  ctx.fillText("↓ zımbaların altında gizli kablo kanalı", w * 0.5, h * 0.2);
   ctx.restore();
 }
 
@@ -390,10 +390,10 @@ function handwrittenNote(ctx, w, h) {
   ctx.fillStyle = "rgba(251,239,218,0.78)";
   ctx.font = 'italic 19px Georgia, serif';
   const lines = [
-    "If Rusty wakes up —",
-    "follow the brightest wire.",
-    "I never finished Bolt.",
-    "I'm sorry. — Kai",
+    "Rusty uyanırsa —",
+    "en parlak kabloyu takip et.",
+    "Bolt'u bitiremedim.",
+    "Üzgünüm. — Kai",
   ];
   let y = h * 0.34;
   for (const ln of lines) {

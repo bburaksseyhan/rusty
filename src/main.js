@@ -1,5 +1,6 @@
 import { inject } from "@vercel/analytics";
 import { Game } from "./core/Game.js";
+import { attachDevTools } from "./dev/GameDevTools.js";
 
 if (import.meta.env.PROD) {
   inject();
@@ -13,7 +14,5 @@ if (import.meta.env.PROD) {
 
 const canvas = document.getElementById("scene");
 const game = new Game(canvas);
+attachDevTools(game);
 game.start();
-
-// Expose for quick debugging from the devtools console.
-if (typeof window !== "undefined") window.__rusty = game;

@@ -7,7 +7,9 @@
 //    3. Thank-you beat → reload to title screen.
 // ============================================================
 
-const CREDITS_HOLD_MS = 6200;
+/** Jenerik animasyonu (6s) bitsin, sonra kısa fade — ardından anket */
+const CREDITS_HOLD_MS = 6800;
+const CREDITS_FADE_MS = 700;
 
 const CREDIT_LINES = [
   { role: "YÖNETMEN",        name: "Masa Lambası"           },
@@ -85,7 +87,29 @@ export class EndingScreen {
     document.body.appendChild(this._root);
 
     this._renderCredits();
-    this._surveyTimer = setTimeout(() => this._renderSurvey(), CREDITS_HOLD_MS);
+    this._surveyTimer = setTimeout(
+      () => this._transitionToSurvey(),
+      CREDITS_HOLD_MS,
+    );
+  }
+
+  /** Jenerik tamamen kalkmadan anket ekleme — tek panel hissi */
+  _transitionToSurvey() {
+    this._surveyTimer = null;
+    if (!this._root || this._card) return;
+
+    if (!this._credits) {
+      this._renderSurvey();
+      return;
+    }
+
+    this._credits.classList.add("ending-credits-out");
+    const el = this._credits;
+    setTimeout(() => {
+      el.remove();
+      if (this._credits === el) this._credits = null;
+      if (this._root && !this._card) this._renderSurvey();
+    }, CREDITS_FADE_MS);
   }
 
   dismiss() {
@@ -158,21 +182,9 @@ export class EndingScreen {
   _renderSurvey() {
     if (!this._root || this._card) return;
 
-    if (this._credits) {
-      this._credits.classList.add("ending-credits-out");
-      const el = this._credits;
-      setTimeout(() => el.remove(), 700);
-      this._credits = null;
-    }
-
     const card = document.createElement("div");
     card.className = "ending-survey-card";
     this._card = card;
-
-    const eyebrow = document.createElement("div");
-    eyebrow.className = "ending-survey-eyebrow";
-    eyebrow.textContent = "Bölüm 1 Sonu";
-    card.appendChild(eyebrow);
 
     const heading = document.createElement("div");
     heading.className = "ending-survey-heading";

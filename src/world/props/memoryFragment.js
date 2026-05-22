@@ -23,24 +23,24 @@ export const MEMORY_FRAGMENTS = [
     position: [6, 2.0, 25],         // near the keyboard — first thing player finds
     type: "note",
     emotionType: "loneliness",
-    subtitle: "A folded note. \"I had to leave in a hurry. Sorry, little one. Find your way home.\"",
-    hintText: "A memory of the one who built you…",
+    subtitle: "Katlanmış bir not. \"Aceleyle gitmek zorundaydım. Üzgünüm küçük olan. Eve yolunu bul.\"",
+    hintText: "Seni yapanın bir anısı…",
   },
   {
     id: "photo_mug",
     position: [-12, 0.5, -18],       // near the coffee mug base
     type: "photo",
     emotionType: "memory",
-    subtitle: "A photograph. A child's hands. Building something small. Something wooden. Something like you.",
-    hintText: "Someone remembers you…",
+    subtitle: "Bir fotoğraf. Bir çocuğun elleri. Küçük bir şey yapıyor. Ahşap. Senin gibi bir şey.",
+    hintText: "Biri seni hatırlıyor…",
   },
   {
     id: "sketch_notebooks",
     position: [-8, 5.5, -38],        // on top of the notebook stack
     type: "sketch",
     emotionType: "hope",
-    subtitle: "An unfinished blueprint. Your face, drawn in pencil. You were never meant to be abandoned.",
-    hintText: "A blueprint of who you are…",
+    subtitle: "Bitmemiş bir plan. Kurşun kalemle çizilmiş yüzün. Terk edilmek için yapılmamıştın.",
+    hintText: "Senin kim olduğunun planı…",
   },
 ];
 

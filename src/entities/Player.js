@@ -137,7 +137,8 @@ export class Player {
       colliders,
       dt,
       PLAYER.radius,
-      PLAYER.height
+      PLAYER.height,
+      PLAYER.collisionHeight
     );
     this.grounded = result.grounded;
 

@@ -33,9 +33,18 @@ export function createFan({ radius = 7, slowness = 1.0, color = 0x14171a } = {})
   const bladePivot = addBlades(group, radius);
   const rgb = addRgbRing(group, radius);
 
+  let running = true;
+
   function animate(t, dt) {
-    bladePivot.rotation.z += dt * 3.5 * slowness;
-    rgb.material.emissive.setHSL((t * 0.06) % 1, 1, 0.55);
+    if (running) {
+      bladePivot.rotation.z += dt * 3.5 * slowness;
+      rgb.material.emissive.setHSL((t * 0.06) % 1, 1, 0.55);
+    }
+  }
+
+  function toggle() {
+    running = !running;
+    return running;
   }
 
   const hazard = {
@@ -44,12 +53,15 @@ export function createFan({ radius = 7, slowness = 1.0, color = 0x14171a } = {})
     radius,
     damage: 1,
     cooldown: 0,
+    get active() {
+      return running;
+    },
     updatePosition() {
       bladePivot.getWorldPosition(this.position);
     },
   };
 
-  return { group, animate, hazard };
+  return { group, animate, hazard, toggle, isRunning: () => running };
 }
 
 function addGrill(group, radius) {

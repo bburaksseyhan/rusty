@@ -101,11 +101,11 @@ export class BatteryTransferPuzzle {
         this.phase = Phase.CARRYING_FOR_CRT;
         this.audio?.crtCableSnap?.();
         this.subtitles?.show?.(
-          "Cell A — warm copper, smells of old solder. The CRT is its home.",
+          "Hücre A — sıcak bakır, eski lehim kokuyor. Evi CRT.",
           4400,
         );
         this.hintBadge?.show?.(
-          "Slot cell A into the small CRT (left machine) — press E",
+          "Hücre A'yı küçük CRT'ye (sol makine) tak — E'ye bas",
           12000,
         );
         this.emotion?.trigger?.("explore", 0.45);
@@ -129,7 +129,7 @@ export class BatteryTransferPuzzle {
         this.audio?.crtStaticClick?.();
         this.audio?.crtBootStart?.();
         this.subtitles?.show?.(
-          "Click. Cell A seats. The CRT exhales blue dust and stretches awake.",
+          "Tık. Hücre A oturdu. CRT mavi toz üfleyip uyanıyor.",
           4600,
         );
         this.emotion?.trigger?.("hope", 0.6);
@@ -137,7 +137,7 @@ export class BatteryTransferPuzzle {
         return true;
       }
       this.hintBadge?.show?.(
-        "Cell A in hand. Press E next to the CRT's side socket (yellow lamp)",
+        "Hücre A elde. CRT'nin yan yuvasına yaklaşıp E'ye bas (sarı lamba)",
         7000,
       );
       this._lastEAt = now;
@@ -154,11 +154,11 @@ export class BatteryTransferPuzzle {
         this.phase = Phase.CARRYING_FOR_LOCK;
         this.audio?.crtCableSnap?.();
         this.subtitles?.show?.(
-          "Cell B — heavier, colder. Made for the drawer's old relays.",
+          "Hücre B — daha ağır, daha soğuk. Çekmecenin eski röleleri için.",
           4400,
         );
         this.hintBadge?.show?.(
-          "Slot cell B into the drawer's side socket (right machine) — press E",
+          "Hücre B'yi çekmecenin yan yuvasına (sağ makine) tak — E'ye bas",
           12000,
         );
         this.emotion?.trigger?.("explore", 0.35);
@@ -166,7 +166,7 @@ export class BatteryTransferPuzzle {
         return true;
       }
       this.hintBadge?.show?.(
-        "Pick up cell B (right of the bench) — press E next to it",
+        "Hücre B'yi al (tezgâhın sağı) — yanına gelip E'ye bas",
         7000,
       );
       this._lastEAt = now;
@@ -185,7 +185,7 @@ export class BatteryTransferPuzzle {
         this.audio?.crtCableSnap?.();
         this.audio?.crtStaticClick?.();
         this.subtitles?.show?.(
-          "Click. Relays cough awake. The drawer breathes. Old wood remembers a key.",
+          "Tık. Röleler öksürerek uyanıyor. Çekmece nefes alıyor. Eski ahşap anahtarı hatırlıyor.",
           4600,
         );
         this.emotion?.trigger?.("memory", 0.55);
@@ -193,7 +193,7 @@ export class BatteryTransferPuzzle {
         return true;
       }
       this.hintBadge?.show?.(
-        "Cell B in hand. Press E next to the drawer's side socket (right machine)",
+        "Hücre B elde. Çekmecenin yan yuvasına yaklaşıp E'ye bas (sağ makine)",
         7000,
       );
       this._lastEAt = now;
@@ -245,11 +245,11 @@ export class BatteryTransferPuzzle {
         this.cameraRig?.setPovAssist?.(0);
         this.audio?.crtBootFinish?.();
         this.subtitles?.show?.(
-          "The CRT spits a single arrow. Right of you, the drawer LEDs flicker once.",
+          "CRT tek bir ok fırlatıyor. Sağında çekmece LED'leri bir kez titriyor.",
           5600,
         );
         this.hintBadge?.show?.(
-          "Pick up cell B from the bench, then slot it into the drawer — press E",
+          "Tezgâhtan hücre B'yi al, sonra çekmeceye tak — E'ye bas",
           14000,
         );
         this.emotion?.trigger?.("hope", 0.45);
@@ -284,11 +284,11 @@ export class BatteryTransferPuzzle {
     this.audio?.hopeSwell?.();
     this.audio?.memoryReveal?.();
     this.subtitles?.show?.(
-      "Drawer 04 opens. Inside: a single warm core — Kai's spare heart. A wooden ramp sighs into place.",
+      "Çekmece 04 açılıyor. İçinde: tek sıcak çekirdek — Kai'nin yedek kalbi. Ahşap rampa yerine oturuyor.",
       6800,
     );
     this.hintBadge?.show?.(
-      "Hidden path deployed — the desk has one more secret to give.",
+      "Gizli yol açıldı — masanın verecek bir sır daha var.",
       14000,
     );
     this.emotion?.gainConfidence?.(0.1);
@@ -302,7 +302,7 @@ export class BatteryTransferPuzzle {
     if (pPos.distanceTo(rigPos) > 24) return false;
     this._hintedIntro = true;
     this.subtitles?.show?.(
-      "A workshop ledge: two cold machines, two warm cells. One for each socket.",
+      "Atölye rafı: iki soğuk makine, iki sıcak hücre. Her yuvaya bir tane.",
       5600,
     );
     return false; // intro fısıltısı E'yi tüketmez

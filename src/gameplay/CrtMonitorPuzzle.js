@@ -70,9 +70,9 @@ export class CrtMonitorPuzzle {
       if (this._within(pPos, slot, CRT_RADIUS.insertSlot)) {
         this.phase = Phase.SLOT_SEATED;
         this.audio?.crtCableSnap();
-        this.subtitles.show("The analogue cell settles into cold brass jaws behind the CRT's ribs.", 3600);
+        this.subtitles.show("Analog hücre CRT'nin kaburgalarının arkasındaki soğuk pirinç çenelere oturuyor.", 3600);
         this.hintBadge?.show(
-          "Cables are loose beside the CRT. Seat the splitter box [E]",
+          "CRT yanında kablolar gevşek. Dağıtıcı kutuyu oturt [E]",
           10000,
         );
         this.emotion?.trigger?.("memory", 0.65);
@@ -86,10 +86,10 @@ export class CrtMonitorPuzzle {
         this.phase = Phase.CABLES_SEATED;
         this.audio?.crtCableSnap();
         this.subtitles.show(
-          "You thread cold copper fingers back into corroded jacks. LEDs breathe once.",
+          "Soğuk bakır parmakları paslı jaklara geri geçiriyorsun. LED'ler bir kez nefes alıyor.",
           4200,
         );
-        this.hintBadge?.show("Flip the chunky desk adapter — restore mains [E]", 10000);
+        this.hintBadge?.show("Kalın masa adaptörünü çevir — gücü ver [E]", 10000);
         return true;
       }
     }
@@ -100,7 +100,7 @@ export class CrtMonitorPuzzle {
         this.phase = Phase.BOOTING;
         this._bootT = 0;
         this.audio?.crtBootStart?.();
-        this.subtitles.show("Current crawls toward glass. Dust trembles.", 5200);
+        this.subtitles.show("Akım cama doğru sürünüyor. Toz titriyor.", 5200);
         this.emotion?.trigger?.("hope", 0.7);
         this.emotion?.trigger?.("explore", 0.25);
         return true;
@@ -112,7 +112,7 @@ export class CrtMonitorPuzzle {
       if (crtRoot.distanceTo(pPos) < 38) {
         this._hintedIntro = true;
         this.subtitles.show(
-          "Someone left a CRT sleeping in cables. Something hums faintly under the grime.",
+          "Biri bir CRT'yi kabloların arasında uyutmuş bırakmış. Kirin altında hafifçe bir şey uğulduyor.",
           5300,
         );
       }
@@ -132,11 +132,11 @@ export class CrtMonitorPuzzle {
         crtMarkBatteryCollected(this.crt, true);
         this.audio?.wonder?.();
         this.subtitles.show(
-          "A spare analogue cell rattles loose from the weave. It belongs in the CRT's ribs.",
+          "Yedek analog hücre örgüden sallanarak düşüyor. CRT'nin kaburgalarına ait.",
           4800,
         );
         this.hintBadge?.show(
-          "Press E at the CRT's sealed battery cradle (rear underside)",
+          "CRT'nin mühürlü pil yuvasında (arka alt) E'ye bas",
           12000,
         );
         this.emotion?.trigger?.("explore", 0.45);
@@ -187,13 +187,13 @@ export class CrtMonitorPuzzle {
     setTimeout(() => this.audio?.hopeSwell?.(), 1600);
 
     const lines = [
-      "On the CRT: scribbles of Kai's first Rusty drafts — arrows crawling across the wooden desk continents.",
-      "The note fades but the route stays etched in glowing phosphor.",
+      "CRT'de: Kai'nin ilk Rusty taslaklarının karalamaları — oklar ahşap masa kıtalarında sürünüyor.",
+      "Not soluyor ama rota parlayan fosforda kalıyor.",
     ];
     this.subtitles.scheduleOpening?.(lines, 9000);
 
     this.hintBadge?.show?.(
-      "Secret route inscribed: keyboard → cables → mug → notebooks → monitor stand (-Z corridor)",
+      "Gizli rota yazıldı: klavye → kablolar → kupa → defterler → monitör standı (-Z koridor)",
       16000,
     );
     this.emotion?.gainConfidence?.(0.08);

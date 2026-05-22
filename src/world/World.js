@@ -21,6 +21,14 @@ export class World {
     this.collectibles = [];
     this.hazards = [];
     this._tickers = [];
+    this.fanProps = [];
+    this.monitorProp = null;
+    this.deskNailProps = [];
+    this.deskScrewProps = [];
+    this.screwElectricRig = null;
+    this.pushableGroups = [];
+    /** @type {Map<THREE.Mesh, { box, top, type, mesh }>} */
+    this._colliderByMesh = new Map();
 
     // Bottomless floor so the player can never fall through.
     this.colliders.push({
@@ -44,7 +52,7 @@ export class World {
     if (rotationY !== undefined) prop.group.rotation.y = rotationY;
 
     this.root.add(prop.group);
-    collectColliders(prop.group, this.colliders);
+    collectColliders(prop.group, this.colliders, this._colliderByMesh);
 
     if (prop.animate) this._tickers.push(prop.animate);
     if (prop.hazard) this.hazards.push(prop.hazard);
@@ -60,8 +68,26 @@ export class World {
     return cell;
   }
 
-  /** Per-frame tick. Drives prop animations + collectible bob/spin. */
+  /**
+   * Sadece hareket eden (itilebilir) objelerin collider'ları — her karede
+   * tüm klavye/mug mesh'lerinde setFromObject donmaya yol açıyordu.
+   */
+  syncColliders() {
+    if (this.pushableGroups.length === 0) return;
+    for (const g of this.pushableGroups) {
+      g.updateMatrixWorld(true);
+      g.traverse((child) => {
+        if (!child.isMesh) return;
+        const c = this._colliderByMesh.get(child);
+        if (!c) return;
+        c.box.setFromObject(child);
+        c.top = c.box.max.y;
+      });
+    }
+  }
+
   update(t, dt) {
+    this.syncColliders();
     for (const c of this.collectibles) {
       if (c.collected) continue;
       c.group.position.y +=

@@ -29,7 +29,7 @@ const ZONES = [
     emotion: "light",
     magnitude: 0.7,
     audioEvent: "hopeSwell",
-    enterSubtitle: "The warm light feels safe. Like a hand over a small flame.",
+    enterSubtitle: "Sıcak ışık güvenli hissettiriyor. Küçük bir alemin üzerindeki el gibi.",
   },
   // --- Loneliness: near the rainy window ---
   {
@@ -39,7 +39,7 @@ const ZONES = [
     emotion: "idle",
     magnitude: 1.0,
     audioEvent: null,
-    enterSubtitle: "Outside, rain taps the glass. The world beyond is vast and cold.",
+    enterSubtitle: "Dışarıda yağmur cama vuruyor. Ötesindeki dünya uçsuz bucaksız ve soğuk.",
   },
   // --- Fear: near the left fan hazard ---
   {
@@ -49,7 +49,7 @@ const ZONES = [
     emotion: "hazard",
     magnitude: 0.9,
     audioEvent: "fearAmbience",
-    enterSubtitle: "Something large is spinning nearby. The air tastes of electricity.",
+    enterSubtitle: "Yakında büyük bir şey dönüyor. Hava elektrik kokuyor.",
   },
   // --- Fear: near the right fan hazard ---
   {
@@ -59,7 +59,7 @@ const ZONES = [
     emotion: "hazard",
     magnitude: 0.85,
     audioEvent: "fearAmbience",
-    enterSubtitle: "The blades cut the dark air like a terrible clock.",
+    enterSubtitle: "Kanatlar karanlık havayı korkunç bir saat gibi kesiyor.",
   },
   // --- Awe: high altitude (top of mug, mouse, notebooks, stand) ---
   {
@@ -70,7 +70,7 @@ const ZONES = [
     emotion: "explore",
     magnitude: 0.8,
     audioEvent: "wonder",
-    enterSubtitle: "From up here, the desk looks like a whole planet.",
+    enterSubtitle: "Buradan yukarıdan masa bütün bir gezegen gibi görünüyor.",
   },
   // --- Dark mid-desk: the cable zone / open floor ---
   {
@@ -80,7 +80,7 @@ const ZONES = [
     emotion: "dark",
     magnitude: 0.4,
     audioEvent: null,
-    enterSubtitle: "The desk stretches endlessly in every direction. It is a lonely feeling.",
+    enterSubtitle: "Masa her yönde sonsuz uzanıyor. Yalnız bir his.",
   },
   // --- Curiosity: RGB keyboard glow ---
   {
@@ -100,7 +100,7 @@ const ZONES = [
     emotion: "explore",
     magnitude: 0.9,
     audioEvent: "wonder",
-    enterSubtitle: "The monitor flickers. Like a lighthouse seen from far away.",
+    enterSubtitle: "Monitör titriyor. Uzaktan görülen bir deniz feneri gibi.",
   },
 ];
 

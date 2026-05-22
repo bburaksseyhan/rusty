@@ -140,7 +140,7 @@ export function createPaperTexture() {
   ctx.stroke();
   ctx.fillStyle = "rgba(40, 40, 60, 0.8)";
   ctx.font = "italic 22px serif";
-  ctx.fillText("don't forget…", 110, 270);
+  ctx.fillText("unutma…", 110, 270);
 
   return toColorTexture(c, 1);
 }
@@ -226,7 +226,7 @@ export function createMugTexture(colorA = "#3a7cb8", colorB = "#1f4b73") {
   ctx.textAlign = "center";
   ctx.fillText("#1", size / 2, size / 2 - 8);
   ctx.font = "900 96px 'SF Pro Display', Inter, sans-serif";
-  ctx.fillText("BOSS", size / 2, size / 2 + 110);
+  ctx.fillText("PATRON", size / 2, size / 2 + 110);
   ctx.restore();
 
   return toColorTexture(c, 1);

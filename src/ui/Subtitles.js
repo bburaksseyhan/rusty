@@ -73,9 +73,9 @@ export class Subtitles {
   }
 
   /** Schedule an opening sequence of whispered lines. */
-  scheduleOpening(lines, intervalMs = 8000, eachDurationMs = 5500) {
+  scheduleOpening(lines, intervalMs = 14000, eachDurationMs = 8000) {
     lines.forEach((line, i) => {
-      setTimeout(() => this.show(line, eachDurationMs), 1600 + i * intervalMs);
+      setTimeout(() => this.show(line, eachDurationMs), 2400 + i * intervalMs);
     });
   }
 

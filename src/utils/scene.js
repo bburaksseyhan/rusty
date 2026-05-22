@@ -10,16 +10,19 @@ import * as THREE from "three";
  * computed in world space so the prop can be freely placed/rotated
  * before being added to the world.
  */
-export function collectColliders(group, sink) {
+export function collectColliders(group, sink, meshIndex = null) {
   group.updateMatrixWorld(true);
   group.traverse((child) => {
     if (child.isMesh && child.userData.collide) {
       const box = new THREE.Box3().setFromObject(child);
-      sink.push({
+      const entry = {
+        mesh: child,
         box,
         top: box.max.y,
         type: child.userData.colliderType || "solid",
-      });
+      };
+      sink.push(entry);
+      meshIndex?.set(child, entry);
     }
   });
 }

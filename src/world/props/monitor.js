@@ -63,13 +63,25 @@ export function createMonitor() {
   neck.position.set(0, 12, 0);
   group.add(neck);
 
+  let awake = true;
+
   function animate(t) {
+    if (!awake) {
+      screenMat.emissiveIntensity = 0.08;
+      glow.intensity = 0.15;
+      return;
+    }
     const flick = 0.92 + Math.sin(t * 22.7) * 0.04 + Math.sin(t * 9.3) * 0.05;
     screenMat.emissiveIntensity = 1.05 * flick;
     glow.intensity = 4.6 * flick;
   }
 
-  return { group, animate };
+  function toggle() {
+    awake = !awake;
+    return awake;
+  }
+
+  return { group, animate, toggle, isAwake: () => awake };
 }
 
 function createDesktopUITexture() {
@@ -97,7 +109,7 @@ function createDesktopUITexture() {
   uctx.fillRect(0, 472, 1024, 40);
   uctx.fillStyle = "rgba(255,255,255,0.75)";
   uctx.font = "bold 22px monospace";
-  uctx.fillText("RUSTY-OS  ·  03:42  ·  ☾ sleep mode", 24, 498);
+  uctx.fillText("RUSTY-OS  ·  03:42  ·  ☾ uyku modu", 24, 498);
 
   const tex = new THREE.CanvasTexture(ui);
   tex.colorSpace = THREE.SRGBColorSpace;
