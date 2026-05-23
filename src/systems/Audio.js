@@ -61,11 +61,63 @@ export class Audio {
     this.started = true;
   }
 
+  /**
+   * Tıklama/dokunma olayının içinde senkron çağırın (iOS zorunluluğu).
+   */
+  initFromGesture() {
+    this.init();
+    this._playSilentPing();
+    if (this.ctx?.state === "suspended") {
+      void this.ctx.resume();
+    }
+  }
+
+  /**
+   * Mobil Safari/Chrome: bağlam "suspended" kalır; resume() + sessiz
+   * buffer iOS'ta ses motorunu gerçekten açar.
+   */
+  async unlock() {
+    if (!this.ctx) this.init();
+    if (!this.ctx) return false;
+
+    this._playSilentPing();
+
+    if (this.ctx.state === "suspended") {
+      try {
+        await this.ctx.resume();
+      } catch {
+        return false;
+      }
+    }
+
+    return this.ctx.state === "running";
+  }
+
+  isRunning() {
+    return Boolean(this.ctx && this.ctx.state === "running");
+  }
+
+  /** iOS — Web Audio kilidini kırmak için tek örnek çalar. */
+  _playSilentPing() {
+    if (!this.ctx) return;
+    try {
+      const buf = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(this.ctx.destination);
+      src.start(0);
+      src.stop(this.ctx.currentTime + 0.001);
+    } catch {
+      /* ignore */
+    }
+  }
+
   pause() {
-    if (this.ctx) this.ctx.suspend();
+    if (this.ctx) void this.ctx.suspend().catch(() => {});
   }
   resume() {
-    if (this.ctx) this.ctx.resume();
+    if (!this.ctx) return;
+    void this.unlock();
   }
 
   // ----------------------------------------------------------
@@ -73,6 +125,7 @@ export class Audio {
   // ----------------------------------------------------------
   startMusic() {
     if (!this.started || this.musicPlaying) return;
+    if (!this.isRunning()) return;
     this.musicPlaying = true;
     const now = this.ctx.currentTime;
     this.musicGain.gain.cancelScheduledValues(now);

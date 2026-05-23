@@ -42,6 +42,7 @@ export class TitleScreen {
     this._started = true;
     this._titleEl.classList.add("gone");
     this._appEl.classList.add("cinematic");
+    // Ses motoru bu jest zincirinde açılmalı (mobil Safari).
     this._startCb?.();
   }
 

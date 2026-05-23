@@ -18,8 +18,10 @@ export function isCoarsePointer() {
 }
 
 export class MobileControls {
-  constructor({ input }) {
+  constructor({ input, audio }) {
     this.input = input;
+    this._audio = audio;
+    this._audioUnlocked = false;
     this._root = document.getElementById("mobile-controls");
     this._enabled = isCoarsePointer();
 
@@ -41,7 +43,21 @@ export class MobileControls {
     this._bindJoystick();
     this._bindLook();
     this._bindButtons();
+    this._bindAudioUnlock();
     this.setVisible(false);
+  }
+
+  /** İlk dokunuşta sesi aç (Safari bazen yalnızca play butonunu yetmez sayar). */
+  _bindAudioUnlock() {
+    const tryUnlock = () => {
+      if (this._audioUnlocked || !this._visible) return;
+      this._audioUnlocked = true;
+      this._audio?.initFromGesture?.();
+      void this._audio?.unlock?.().then((ok) => {
+        if (ok && !this._audio.musicPlaying) this._audio.startMusic();
+      });
+    };
+    this._root.addEventListener("pointerdown", tryUnlock, { passive: true });
   }
 
   isActive() {

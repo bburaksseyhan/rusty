@@ -318,7 +318,10 @@ export class Game {
     this.objective.setCurrent(0);
     this.hintBadge = new HintBadge();
     this.controlsHelp = new ControlsHelp();
-    this.mobileControls = new MobileControls({ input: this.input });
+    this.mobileControls = new MobileControls({
+      input: this.input,
+      audio: this.audio,
+    });
     this.endingScreen = new EndingScreen();
 
     this.crtMonitorPuzzle = this.world.crtSecret
@@ -449,8 +452,7 @@ export class Game {
       this._started = true;
       this.controlsHelp.setVisible(true);
       this.mobileControls.setVisible(true);
-      this.audio.init();
-      this.audio.startMusic();
+      void this._startAudio();
     }
     this.subtitles.hide();
     this.input.setEnabled(true);
@@ -460,13 +462,18 @@ export class Game {
     }
   }
 
+  async _startAudio() {
+    this.audio.initFromGesture();
+    const ok = await this.audio.unlock();
+    if (ok) this.audio.startMusic();
+  }
+
   // ----------------------------------------------------------
   _begin() {
     this._started = true;
     this.controlsHelp.setVisible(true);
     this.mobileControls.setVisible(true);
-    this.audio.init();
-    this.audio.startMusic();
+    void this._startAudio();
 
     // Rusty wakes up — curious, a little lonely
     this.emotion.trigger("explore", 0.6);
