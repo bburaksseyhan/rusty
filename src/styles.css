@@ -745,7 +745,6 @@ html, body, #app {
     font-size: 10px;
   }
   .hint { display: none; }
-  .subtitle { font-size: 13px; bottom: 50px; padding: 0 14px; }
   .controls-help { display: none; }
 }
 
@@ -868,6 +867,27 @@ body.mobile-controls-on #scene {
 
 .mobile-btn-story {
   border-color: rgba(200, 160, 255, 0.45);
+}
+
+/* Hikâye / altyazı — sağ alt butonların (Koş satırı) üstünde */
+body.mobile-controls-on .subtitle {
+  left: auto;
+  right: max(12px, env(safe-area-inset-right));
+  transform: none;
+  bottom: calc(
+    max(18px, env(safe-area-inset-bottom)) + 12.25rem
+  );
+  max-width: min(200px, 48vw);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  text-align: center;
+  z-index: 7;
+  pointer-events: none;
+  border-radius: 10px;
+  background: rgba(8, 12, 18, 0.68);
+  border: 1px solid rgba(255, 220, 170, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 /* =============================================================
