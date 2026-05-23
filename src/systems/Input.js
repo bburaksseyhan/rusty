@@ -31,9 +31,8 @@ export class Input {
     this._dragging = false;
     this._lastX = 0;
     this._lastY = 0;
-    this._touchActive = false;
-    this._touchX = 0;
-    this._touchY = 0;
+    this._virtualMove = { x: 0, z: 0 };
+    this._virtualSprint = false;
 
     this._pointerLocked = false;
     this._enabled = true;
@@ -60,7 +59,56 @@ export class Input {
     this.mouseDelta.y = 0;
     this.wheelDelta = 0;
     this._dragging = false;
-    this._touchActive = false;
+    this._virtualMove.x = 0;
+    this._virtualMove.z = 0;
+    this._virtualSprint = false;
+  }
+
+  /** Sanal joystick: x = sağ (+), z = ileri (+). */
+  setVirtualMove(x, z) {
+    this._virtualMove.x = x;
+    this._virtualMove.z = z;
+  }
+
+  setVirtualSprint(active) {
+    this._virtualSprint = !!active;
+  }
+
+  /** Mobil bakış alanı — CameraRig mouseDelta ile birleşir. */
+  addLookDelta(dx, dy) {
+    this.mouseDelta.x += dx;
+    this.mouseDelta.y += dy;
+  }
+
+  addWheelDelta(delta) {
+    this.wheelDelta += delta;
+  }
+
+  /**
+   * Klavye + sanal stick birleşimi (kamera-yatay düzlemde x/z).
+   * Uzunluk >1 ise normalize edilir.
+   */
+  getMovementStick() {
+    let x = 0;
+    let z = 0;
+    if (this.isDown("KeyW") || this.isDown("ArrowUp")) z += 1;
+    if (this.isDown("KeyS") || this.isDown("ArrowDown")) z -= 1;
+    if (this.isDown("KeyA") || this.isDown("ArrowLeft")) x -= 1;
+    if (this.isDown("KeyD") || this.isDown("ArrowRight")) x += 1;
+
+    const vx = this._virtualMove.x;
+    const vz = this._virtualMove.z;
+    if (vx !== 0 || vz !== 0) {
+      x = vx;
+      z = vz;
+    }
+
+    const len = Math.hypot(x, z);
+    if (len > 1) {
+      x /= len;
+      z /= len;
+    }
+    return { x, z };
   }
 
   /** True if the browser has acquired pointer lock on our canvas. */
@@ -72,7 +120,21 @@ export class Input {
     return this._keys.has(code);
   }
   isSprinting() {
-    return this._keys.has("ShiftLeft") || this._keys.has("ShiftRight");
+    return (
+      this._virtualSprint ||
+      this._keys.has("ShiftLeft") ||
+      this._keys.has("ShiftRight")
+    );
+  }
+
+  queueJump() {
+    this._jumpQueued = true;
+  }
+  queueInteract() {
+    this._interactQueued = true;
+  }
+  queueStory() {
+    this._storyQueued = true;
   }
 
   /** One-shot jump trigger that resets after read. */
@@ -201,19 +263,5 @@ export class Input {
       { passive: false }
     );
 
-    this.dom.addEventListener("touchstart", (e) => {
-      if (!this._enabled) return;
-      this._touchActive = true;
-      this._touchX = e.touches[0].clientX;
-      this._touchY = e.touches[0].clientY;
-    });
-    this.dom.addEventListener("touchend", () => (this._touchActive = false));
-    this.dom.addEventListener("touchmove", (e) => {
-      if (!this._enabled || !this._touchActive) return;
-      this.mouseDelta.x += e.touches[0].clientX - this._touchX;
-      this.mouseDelta.y += e.touches[0].clientY - this._touchY;
-      this._touchX = e.touches[0].clientX;
-      this._touchY = e.touches[0].clientY;
-    });
   }
 }

@@ -37,12 +37,17 @@ export class Objective {
     });
   }
 
+  isVisible() {
+    return this._visible;
+  }
+
   toggle() {
     this._visible ? this.hide() : this.show();
   }
 
   show() {
     this._panel.classList.add("show");
+    this._panel.classList.remove("closing");
     this._panel.setAttribute("aria-hidden", "false");
     this._visible = true;
     clearTimeout(this._timer);
@@ -50,9 +55,11 @@ export class Objective {
   }
 
   hide() {
+    this._panel.classList.add("closing");
     this._panel.classList.remove("show");
     this._panel.setAttribute("aria-hidden", "true");
     this._visible = false;
     clearTimeout(this._timer);
+    this._timer = null;
   }
 }

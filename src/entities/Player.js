@@ -74,10 +74,11 @@ export class Player {
     const right = TMP_RIGHT.set(-forward.z, 0, forward.x);
 
     const wish = TMP_WISH.set(0, 0, 0);
-    if (this.input.isDown("KeyW") || this.input.isDown("ArrowUp")) wish.add(forward);
-    if (this.input.isDown("KeyS") || this.input.isDown("ArrowDown")) wish.sub(forward);
-    if (this.input.isDown("KeyA") || this.input.isDown("ArrowLeft")) wish.sub(right);
-    if (this.input.isDown("KeyD") || this.input.isDown("ArrowRight")) wish.add(right);
+    const stick = this.input.getMovementStick();
+    if (stick.x !== 0 || stick.z !== 0) {
+      wish.addScaledVector(right, stick.x);
+      wish.addScaledVector(forward, stick.z);
+    }
 
     const sprinting = this.input.isSprinting();
     this._sprinting = sprinting;

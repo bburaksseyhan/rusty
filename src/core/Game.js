@@ -32,6 +32,7 @@ import { TitleScreen } from "../ui/TitleScreen.js";
 import { Objective } from "../ui/Objective.js";
 import { HintBadge } from "../ui/HintBadge.js";
 import { ControlsHelp } from "../ui/ControlsHelp.js";
+import { MobileControls } from "../ui/MobileControls.js";
 import { DeskScrews } from "../gameplay/DeskScrews.js";
 import { EndingScreen } from "../ui/EndingScreen.js";
 import { ChargeFinale } from "../gameplay/ChargeFinale.js";
@@ -317,6 +318,7 @@ export class Game {
     this.objective.setCurrent(0);
     this.hintBadge = new HintBadge();
     this.controlsHelp = new ControlsHelp();
+    this.mobileControls = new MobileControls({ input: this.input });
     this.endingScreen = new EndingScreen();
 
     this.crtMonitorPuzzle = this.world.crtSecret
@@ -446,6 +448,7 @@ export class Game {
     if (!this._started) {
       this._started = true;
       this.controlsHelp.setVisible(true);
+      this.mobileControls.setVisible(true);
       this.audio.init();
       this.audio.startMusic();
     }
@@ -461,6 +464,7 @@ export class Game {
   _begin() {
     this._started = true;
     this.controlsHelp.setVisible(true);
+    this.mobileControls.setVisible(true);
     this.audio.init();
     this.audio.startMusic();
 
@@ -645,6 +649,12 @@ export class Game {
   _handleInteract() {
     const pressed = this.input.consumeInteract();
     if (!pressed) return;
+
+    if (this.objective.isVisible()) {
+      this.objective.hide();
+      this.subtitles.hide();
+      return;
+    }
 
     const t = this._clock.elapsedTime;
     const pPos = this.player.root.position;
@@ -1028,6 +1038,7 @@ export class Game {
 
     this.hintBadge.hide();
     this.controlsHelp.setVisible(false);
+    this.mobileControls.setVisible(false);
     this.objective.hide?.();
     this.input.setEnabled(false);
     if (document.pointerLockElement) {
@@ -1051,6 +1062,7 @@ export class Game {
     this._endingShown = true;
     this._endingLocked = true;
     this.controlsHelp.setVisible(false);
+    this.mobileControls.setVisible(false);
 
     this.input.setEnabled(false);
     if (document.pointerLockElement) {

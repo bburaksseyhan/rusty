@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { requireAdmin } from "./auth.js";
+import { enforceAdminAuth } from "./auth.js";
 import { applyCors, handleOptions } from "./cors.js";
 import { insertFeedback, listFeedback, feedbackStats, storageBackend } from "./store.js";
 import { rateLimitMiddleware } from "./rateLimit.js";
@@ -80,32 +80,29 @@ export const adminStats = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }
-  requireAdmin(req, res, async () => {
-    res.json(await feedbackStats());
-  });
+  if (!enforceAdminAuth(req, res)) return;
+  res.json(await feedbackStats());
 });
 
 export const adminFeedback = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }
-  requireAdmin(req, res, async () => {
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
-    const offset = Math.max(0, Number(req.query.offset) || 0);
-    res.json({ items: await listFeedback({ limit, offset }) });
-  });
+  if (!enforceAdminAuth(req, res)) return;
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+  const offset = Math.max(0, Number(req.query.offset) || 0);
+  res.json({ items: await listFeedback({ limit, offset }) });
 });
 
 export const adminPage = wrap(async (req, res) => {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "method_not_allowed" });
   }
-  requireAdmin(req, res, () => {
-    const adminPath = path.join(__dirname, "admin.html");
-    if (!fs.existsSync(adminPath)) {
-      return res.status(500).send("admin.html bulunamadı");
-    }
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(fs.readFileSync(adminPath, "utf8"));
-  });
+  if (!enforceAdminAuth(req, res)) return;
+  const adminPath = path.join(__dirname, "admin.html");
+  if (!fs.existsSync(adminPath)) {
+    return res.status(500).send("admin.html bulunamadı");
+  }
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.status(200).send(fs.readFileSync(adminPath, "utf8"));
 });

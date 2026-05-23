@@ -85,9 +85,10 @@
     async function load() {
       const meta = document.getElementById("meta");
       try {
+        const fetchOpts = { credentials: "include" };
         const [statsRes, listRes] = await Promise.all([
-          fetch("/api/admin/stats"),
-          fetch("/api/admin/feedback?limit=50"),
+          fetch("/api/admin/stats", fetchOpts),
+          fetch("/api/admin/feedback?limit=50", fetchOpts),
         ]);
         if (statsRes.status === 401 || listRes.status === 401) {
           throw new Error("Yetkisiz — tarayıcıda kullanıcı adı ve şifre girin (ADMIN_USER / ADMIN_PASS).");

@@ -2,7 +2,9 @@
 //  ControlsHelp — kalıcı tuş kılavuzu (oyun sırasında görünür).
 // ============================================================
 
-const ROWS = [
+import { isCoarsePointer } from "./MobileControls.js";
+
+const ROWS_DESKTOP = [
   { keys: "W A S D", action: "Yürü" },
   { keys: "Shift", action: "Koş" },
   { keys: "Space", action: "Zıpla" },
@@ -15,15 +17,28 @@ const ROWS = [
   { keys: "Altın vida", action: "Üstüne zıpla → devreye bağlanır" },
 ];
 
+const ROWS_MOBILE = [
+  { keys: "Joystick", action: "Yürü" },
+  { keys: "Koş", action: "Sprint" },
+  { keys: "Zıpla", action: "Zıpla" },
+  { keys: "Sağ alan", action: "Kamerayı çevir" },
+  { keys: "Çimdikle", action: "Yakınlaştır / uzaklaştır" },
+  { keys: "E", action: "Etkileşim · hedef" },
+  { keys: "Q", action: "Rusty hikâyesi" },
+  { keys: "Çivi", action: "Üstüne zıpla → çakılır" },
+  { keys: "Altın vida", action: "Üstüne zıpla → devreye bağlanır" },
+];
+
 export class ControlsHelp {
   constructor() {
     this._root = document.getElementById("controls-help");
     if (!this._root) return;
 
+    const rows = isCoarsePointer() ? ROWS_MOBILE : ROWS_DESKTOP;
     const list = document.createElement("ul");
     list.className = "controls-help-list";
 
-    for (const row of ROWS) {
+    for (const row of rows) {
       const li = document.createElement("li");
       const kbd = document.createElement("kbd");
       kbd.textContent = row.keys;
